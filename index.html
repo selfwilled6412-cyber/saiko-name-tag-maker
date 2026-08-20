@@ -1,151 +1,79 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>サイ校プロジェクト岩国 出演者パスメーカー</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>サイ校プロジェクト岩国 出演者パスメーカー</title>
+  <style>
+    html,body{margin:0;min-height:100%;font-family:"Yu Gothic",Meiryo,sans-serif;background:#f4f6fb;color:#111827}
+    #boot{min-height:100vh;display:grid;place-items:center;padding:24px;box-sizing:border-box}
+    .boot-card{width:min(560px,100%);background:#fff;border-radius:22px;box-shadow:0 18px 50px rgba(15,23,42,.12);padding:32px;text-align:center}
+    .boot-title{font-size:clamp(22px,5vw,32px);font-weight:800;margin:0 0 14px}
+    .boot-msg{color:#64748b;line-height:1.8;margin:0}
+    .spinner{width:44px;height:44px;margin:24px auto;border:5px solid #e2e8f0;border-top-color:#4f46e5;border-radius:50%;animation:spin .8s linear infinite}
+    .error{color:#b91c1c;white-space:pre-wrap;text-align:left;background:#fef2f2;border-radius:12px;padding:14px;margin-top:18px;display:none}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
 </head>
 <body>
-    <header>
-        <h1>サイ校プロジェクト岩国 出演者パスメーカー</h1>
-    </header>
-
-    <div class="container">
-        <!-- 左側：操作パネル -->
-        <div class="controls-panel">
-            <div class="control-group">
-                <label>名札タイプ</label>
-                <select id="type-select">
-                    <option value="user">利用者用 (大きいサイズ)</option>
-                    <option value="staff">スタッフ用 (名刺サイズ)</option>
-                </select>
-            </div>
-
-            <div class="control-group size-inputs">
-                <div>
-                    <label>横幅 (mm)</label>
-                    <input type="number" id="width-input" value="100">
-                </div>
-                <div>
-                    <label>縦幅 (mm)</label>
-                    <input type="number" id="height-input" value="70">
-                </div>
-            </div>
-
-            <div class="control-group">
-                <label>名前</label>
-                <input type="text" id="name-input" value="山田 太郎" placeholder="名前を入力">
-            </div>
-
-            <div class="control-group">
-                <label>区分</label>
-                <select id="role-select">
-                    <option value="メンバー">メンバー</option>
-                    <option value="スタッフ">スタッフ</option>
-                </select>
-            </div>
-
-            <div class="control-group">
-                <label>キャッチコピー</label>
-                <div style="display:flex; align-items:center; gap: 0.5rem; margin-bottom:0.5rem;">
-                    <input type="checkbox" id="catchphrase-enable" checked>
-                    <label for="catchphrase-enable" style="margin:0; font-weight:normal;">表示する</label>
-                </div>
-                <div id="catchphrase-container">
-                    <input type="text" id="catchphrase-input" maxlength="30" placeholder="自由に入力（最大30文字）" value="今日も自分らしく">
-                    <button class="btn btn-secondary" id="suggest-btn" style="margin-top:0.5rem; font-size:0.9rem; padding:0.5rem;">✨ おすすめを3つ出す</button>
-                    <div id="suggest-list" style="margin-top:0.5rem; display:flex; flex-direction:column; gap:0.3rem;"></div>
-                </div>
-            </div>
-
-            <div class="control-group">
-                <label>似顔絵 (自動で丸く切り抜かれます)</label>
-                <div class="file-upload">
-                    <input type="file" id="image-upload" accept="image/png, image/jpeg, image/webp">
-                    <span class="file-upload-btn" id="upload-btn-text">クリックして画像を選択</span>
-                </div>
-                <div class="slider-group">
-                    <label style="margin:0; width:60px;">拡大縮小</label>
-                    <input type="range" id="image-scale" min="0.5" max="3" step="0.1" value="1">
-                </div>
-                <div class="slider-group">
-                    <label style="margin:0; width:60px;">左右位置</label>
-                    <input type="range" id="image-x" min="-200" max="200" step="1" value="0">
-                </div>
-                <div class="slider-group">
-                    <label style="margin:0; width:60px;">上下位置</label>
-                    <input type="range" id="image-y" min="-200" max="200" step="1" value="0">
-                </div>
-            </div>
-
-            <div class="control-group">
-                <label>派手さ</label>
-                <select id="flashiness-select">
-                    <option value="1">ちょい派手</option>
-                    <option value="2" selected>かなり派手</option>
-                    <option value="3">ぶっ飛びMAX</option>
-                </select>
-            </div>
-
-            <div class="control-group">
-                <label>デザイン選択</label>
-                <div class="theme-grid" id="theme-grid">
-                    <!-- JavaScriptで動的に生成 -->
-                </div>
-            </div>
-            
-            <p style="font-size: 0.8rem; color: #666; margin-bottom: 1rem;">
-                ※作成したデータや画像はブラウザ内にのみ保存され、外部サーバーには送信されません。
-            </p>
-
-            <button class="btn btn-primary" id="add-to-list-btn">
-                ➕ 印刷リストに追加
-            </button>
-            <div style="display:flex; gap:1rem; margin-top:1rem;">
-                <button class="btn btn-secondary" id="download-png-btn" style="flex:1;">
-                    🖼️ PNG保存
-                </button>
-            </div>
-        </div>
-
-        <!-- 右側：プレビューパネル -->
-        <div class="preview-panel">
-            <div class="preview-container" id="preview-container">
-                <!-- SVGがここに挿入される -->
-            </div>
-
-            <!-- 印刷リスト -->
-            <div class="list-panel">
-                <h2>印刷リスト <button class="btn btn-primary" id="print-btn" style="width:auto; padding: 0.5rem 1rem;">🖨️ A4プレビュー / 印刷</button></h2>
-                <div class="list-grid" id="list-grid">
-                    <!-- リストアイテムがここに挿入される -->
-                </div>
-                <div style="margin-top: 2rem; text-align: right;">
-                    <button class="btn btn-danger" id="clear-all-btn" style="width: auto; display: inline-block;">🗑️ データをすべて初期化</button>
-                </div>
-            </div>
-        </div>
+  <div id="boot">
+    <div class="boot-card">
+      <h1 class="boot-title">サイ校プロジェクト岩国<br>出演者パスメーカー</h1>
+      <div class="spinner" id="spinner"></div>
+      <p class="boot-msg" id="boot-msg">名札メーカーを読み込んでいます…</p>
+      <div class="error" id="boot-error"></div>
     </div>
+  </div>
 
-    <!-- 確認モーダル -->
-    <div class="modal-overlay" id="confirm-modal">
-        <div class="modal">
-            <h3 id="modal-title">確認</h3>
-            <p id="modal-message">本当に実行しますか？</p>
-            <div class="modal-actions">
-                <button class="btn" id="modal-cancel">キャンセル</button>
-                <button class="btn btn-danger" id="modal-confirm">実行する</button>
-            </div>
-        </div>
-    </div>
+  <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
+  <script>
+  (async()=>{
+    const msg=document.getElementById('boot-msg');
+    const errBox=document.getElementById('boot-error');
+    const spinner=document.getElementById('spinner');
+    try{
+      if(!window.fflate) throw new Error('展開ライブラリを読み込めませんでした。');
+      msg.textContent='デザインデータを準備しています…';
+      const res=await fetch('./app.zip?v=20260820',{cache:'no-store'});
+      if(!res.ok) throw new Error('アプリデータを取得できませんでした（'+res.status+'）。');
+      const zipBytes=new Uint8Array(await res.arrayBuffer());
+      const files=window.fflate.unzipSync(zipBytes);
+      const decoder=new TextDecoder('utf-8');
+      const get=(suffix)=>{
+        const key=Object.keys(files).find(k=>k.endsWith('/'+suffix)||k===suffix);
+        if(!key) throw new Error(suffix+' が見つかりません。');
+        return decoder.decode(files[key]);
+      };
 
-    <div id="toast">保存しました</div>
+      const sourceHtml=get('index.html');
+      const css=get('style.css');
+      const themes=get('themes.js');
+      let app=get('app.js');
 
-    <!-- 印刷用エリア (画面外) -->
-    <div id="print-area"></div>
+      msg.textContent='画面を組み立てています…';
+      const parsed=new DOMParser().parseFromString(sourceHtml,'text/html');
+      parsed.querySelectorAll('script').forEach(el=>el.remove());
+      document.title=parsed.title||document.title;
 
-    <script src="themes.js"></script>
-    <script src="app.js"></script>
+      const style=document.createElement('style');
+      style.textContent=css;
+      document.head.appendChild(style);
+      document.body.innerHTML=parsed.body.innerHTML;
+
+      // ZIP内の元アプリはローカル起動時にDOMContentLoadedを待つ構成。
+      // Webローダーでは読み込み完了済みなので、その場でinit()を呼ぶ。
+      app=app.replace(/document\.addEventListener\(['\"]DOMContentLoaded['\"],\s*init\s*\);?/,'init();');
+
+      new Function(themes)();
+      new Function(app)();
+    }catch(error){
+      console.error(error);
+      spinner.style.display='none';
+      msg.textContent='読み込みに失敗しました。';
+      errBox.style.display='block';
+      errBox.textContent=String(error&&error.message?error.message:error)+'\n\nページを再読み込みしてください。';
+    }
+  })();
+  </script>
 </body>
 </html>
