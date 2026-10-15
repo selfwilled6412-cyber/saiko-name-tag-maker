@@ -30,8 +30,8 @@ async function onRequestPost({request,env}){
  const instructions=`競技:${mode}。チーム数:${Math.max(2,Math.min(10,Number(data?.teamCount)||3))}。スタッフの発言:${msg||"新しいお題案を考えて"}。検討中のお題案:${old?JSON.stringify(old):"まだなし"}。最近のお題（重複を避ける）:${recent.join(" / ")||"なし"}。`;
  try{
   const out=await env.AI.run("@cf/qwen/qwen3-30b-a3b-fp8",{
-   messages:[{role:"system",content:kind==="chat"?basePrompt:draftPrompt},...history,{role:"user",content:instructions+(kind==="chat"?"今回はスタッフとの相談として自然に返事をし、お題は確定しない。":"相談内容に合う新しいお題案を作ってください。")}],
-   max_tokens:kind==="chat"?170:800,temperature:kind==="chat"?0.35:0.62,top_p:0.85,
+   messages:[{role:"system",content:(kind==="chat"?basePrompt:draftPrompt)+"\n/no_think"},...history,{role:"user",content:"/no_think\n"+instructions+(kind==="chat"?"今回はあなた自身の返事を２文だけ。司会者の次の発言や会話脚本を書かない。":"相談内容に合う新しいお題案をJSONのみで作る。")}],
+   max_tokens:kind==="chat"?450:950,temperature:kind==="chat"?0.35:0.62,top_p:0.85,
    ...(kind==="draft"?{response_format:{type:"json_schema",json_schema:{type:"object",properties:{reply:{type:"string"},title:{type:"string"},prompt:{type:"string"},options:{type:"array",items:{type:"string"}},evidence:{type:"string"},criterion:{type:"string"}},required:["reply","title","prompt","options","evidence","criterion"]}}}:{})
   });
   const responseValue=out?.response||out?.result?.response||out?.choices?.[0]?.message?.content||"";
