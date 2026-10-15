@@ -41,14 +41,15 @@ async function onRequestPost({request,env}){
    const clean=raw.replace(/<[^>]*>/g,"").replace(/^\s*(もこ|AI|アシスタント)\s*[:：]\s*/,"").split(/\n\s*(スタッフ|司会者|ユーザー)\s*[:：]/)[0].trim();
    return replyJSON({kind,provider:"workers-ai",reply:clean.slice(0,245)});
   }
-  const obj=typeof responseValue==="object"&&responseValue!==null?responseValue:parseJSON(raw),prompt=String(obj.prompt||"").trim().slice(0,220);
+  const obj=typeof responseValue==="object"&&responseValue!==null?responseValue:parseJSON(raw);let prompt=String(obj.prompt||"").trim().slice(0,220);
+  if(mode==="court"&&!/有罪/.test(prompt)){prompt=prompt.replace(/は[？?]$/,"は有罪か？");if(!/有罪/.test(prompt))prompt=prompt.replace(/[？?。\s]+$/,"")+"。この行為は有罪か？";}
   const options=Array.isArray(obj.options)?obj.options.slice(0,2).map(x=>String(x||"").trim().slice(0,80)).filter(Boolean):[];
   if(!prompt)throw Error("empty_prompt");
   if(["sync","choice"].includes(mode)&&(options.length!==2||options[0]===options[1]))throw Error("options");
   if(mode==="court"&&!String(obj.evidence||"").trim())throw Error("evidence");
   return replyJSON({kind,provider:"workers-ai",
    reply:String(obj.reply||"この案、どうかな？ 変えたいところがあれば教えてね。").slice(0,160),
-   draft:{mode,title:String(obj.title||"おバカチャレンジ").slice(0,48),prompt,options,evidence:String(obj.evidence||"").slice(0,140),criterion:String(obj.criterion||"").slice(0,140)}});
+   draft:{mode,title:String(obj.title||"おバカチャレンジ").slice(0,48),prompt,options,evidence:String(obj.evidence||"").slice(0,140),criterion:mode==="court"?"検察と弁護の言い分を聞き、判定役が勝訴側を決めます。":String(obj.criterion||"").slice(0,140)}});
  }catch(error){return replyJSON({error:"AI_UNAVAILABLE",reason:String(error?.message||"unknown").slice(0,80)},503)}
 }
 function onRequestGet(){return replyJSON({error:"method_not_allowed"},405)}
