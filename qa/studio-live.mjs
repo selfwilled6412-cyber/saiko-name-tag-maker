@@ -1,5 +1,5 @@
 const base='https://saiko-world-grand-prix.pages.dev';
-const files=[['/','game-v3.js'],['/studio.html','game-v3.js'],['/game-v3.js','何チームで勝負する？'],['/game-v3.css','.setup-names'],['/host-cue-sheet.html','司会スタッフ専用カンペ'],['/manifest.webmanifest','standalone']];
+const files=[['/studio.html','game-v3.js'],['/game-v3.js','何チームで勝負する？'],['/game-v3.css','.setup-names'],['/host-cue-sheet.html','司会スタッフ専用カンペ'],['/manifest.webmanifest','standalone']];
 for(const [path,marker] of files){
  let result=false,lastStatus=0,lastSize=0;
  for(let attempt=0;attempt<12;attempt++){
