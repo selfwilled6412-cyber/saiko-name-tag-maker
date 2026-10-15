@@ -19,3 +19,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Verify JavaScript syntax and game rules
         run: node --test qa/smoke.test.mjs
+      - name: Verify published Cloudflare Pages contains latest changes
+        run: node qa/live-deploy.mjs
