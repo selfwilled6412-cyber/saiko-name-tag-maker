@@ -6,6 +6,9 @@ on:
       - 'index.html'
       - 'game-v3.js'
       - 'game-v4.js'
+      - 'avatar.html'
+      - 'avatar-stage.js'
+      - 'avatar-stage.css'
       - 'game-v3.css'
       - 'game-v4.css'
       - 'new-game.html'
@@ -26,7 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Verify JavaScript syntax and game rules
-        run: node --test qa/studio.test.mjs qa/director.test.mjs qa/v4.test.mjs qa/partner.test.mjs
+        run: node --test qa/studio.test.mjs qa/director.test.mjs qa/v4.test.mjs qa/partner.test.mjs qa/avatar.test.mjs
       - name: Verify published Cloudflare Pages contains latest changes
         run: node qa/live-deploy.mjs
       - name: Verify published game studio and Workers AI endpoint
