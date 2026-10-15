@@ -43,10 +43,12 @@ export async function onRequestPost({request,env}){
   const m=MODES[obj.mode]?obj.mode:mode;
   const prompt=String(obj.prompt||"").slice(0,150).trim();
   if(!prompt)throw new Error("empty_prompt");
+  const options=Array.isArray(obj.options)?obj.options.slice(0,2).map(x=>String(x).slice(0,55).trim()).filter(Boolean):[];
+  if((["sync","choice"].includes(m)&& (options.length!==2||options[0]===options[1])) || (m==="court"&&!String(obj.evidence||"").trim()))throw new Error("invalid_game_schema");
   return json({
    provider:"workers-ai",reply:String(obj.reply||"新しいお題を作ったよ！").slice(0,90),
    item:{mode:m,title:String(obj.title||"新しいチャレンジ").slice(0,35),
-   prompt,options:Array.isArray(obj.options)?obj.options.slice(0,2).map(x=>String(x).slice(0,55)):[],
+   prompt,options,
    evidence:String(obj.evidence||"").slice(0,110),criterion:String(obj.criterion||"").slice(0,110)}
   });
  }catch(err){return json({error:"AI_FAILED",message:"AI生成に失敗しました。端末内でお題を作成できます。"},503)}
