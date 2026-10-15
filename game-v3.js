@@ -118,7 +118,7 @@ function setTimer(seconds){timerDuration=seconds;timerRemaining=seconds;timerRun
 function timerToggle(){if(timerRunning){timerRemaining=Math.max(0,Math.ceil((timerDeadline-Date.now())/1000));timerRunning=false;}else{if(timerRemaining<=0)timerRemaining=timerDuration;timerDeadline=Date.now()+timerRemaining*1000;timerRunning=true;}tick();}
 const btn=(text,act,cls="")=>'<button class="button '+cls+'" data-action="'+act+'">'+text+"</button>";
 function scoresMarkup(){return s.scores.map((p,i)=>'<div class="scorecard '+(p===Math.max(...s.scores)&&s.scores.some(v=>v>0)?"leader":"")+'"><input aria-label="チーム名'+(i+1)+'" maxlength="22" data-name="'+i+'" value="'+esc(s.names[i])+'"><strong>'+p+'</strong><small>POINTS</small></div>').join("");}
-function roles(){return [s.courtRound%3,(s.courtRound+1)%3,(s.courtRound+2)%3];}
+function roles(){const n=s.ruled?Math.max(0,s.courtRound-1):s.courtRound;return [n%3,(n+1)%3,(n+2)%3];}
 function promptMarkup(){
  const item=s.item;
  if(!item)return '<div class="gameframe"><span class="kicker">READY TO PLAY</span><div class="gametitle">今日は何で勝負する？</div><p>競技を選んだら「お題を生成」を押してね！</p></div>';
