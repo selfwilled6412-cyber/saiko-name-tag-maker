@@ -1,0 +1,21 @@
+name: Verify SAIKO World Grand Prix
+on:
+  push:
+    branches: [saiko-world-grand-prix]
+    paths:
+      - 'index.html'
+      - 'qa/**'
+      - '.github/workflows/verify-grand-prix.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  game-smoke-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify JavaScript syntax and game rules
+        run: node --test qa/smoke.test.mjs
