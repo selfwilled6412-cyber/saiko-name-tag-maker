@@ -31,3 +31,5 @@ jobs:
         run: node qa/live-deploy.mjs
       - name: Verify published game studio and Workers AI endpoint
         run: node qa/studio-live.mjs
+      - name: Verify cute-game preview and Cloudflare staff conversation
+        run: node qa/v4-live.mjs
