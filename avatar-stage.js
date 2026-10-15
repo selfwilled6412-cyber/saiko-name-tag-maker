@@ -49,7 +49,7 @@ function badge(){return `${state.questionNumber?"第"+(state.gameIndex+1)+"ゲ�
 function overlay(){
  if(showSetup)return `<section class="overlay" role="dialog" aria-modal="true"><div class="panel"><h2>🌸 ゲームを始めよう！</h2><p>はじめにマイクの使用を許可してね。開始後は、アバターに声をかけるだけで進められます。</p><div class="form-grid"><label class="field">チーム数（2〜10）<select id="teams">${Array.from({length:9},(_,i)=>i+2).map(n=>`<option value="${n}"${n===state.names.length?" selected":""}>${n}チーム</option>`).join("")}</select></label><label class="field">スタッフの呼び名<input id="staffName" maxlength="15" value="${escapeHTML(state.staff)}" placeholder="スタッフ"></label></div><p>対応環境：マイク付きのChrome・Edgeなど。音声が使えない端末では文字入力でも進められます。音声案内は端末から聞こえる音量にしてください。</p><div class="actions"><button class="primary" data-action="begin">🎙️ ゲームを始める</button><button data-action="dismiss">あとで</button></div></div></section>`;
  if(showType==="scores")return `<div class="overlay" role="dialog" aria-modal="true"><section class="panel"><h2>🏆 現在の得点</h2>${state.names.map((n,i)=>`<p><strong>${escapeHTML(n)}</strong>　${state.scores[i]}点</p>`).join("")}<p>声で「チーム1に5点」「次のお題」「次のゲーム」と話しかけられます。</p><div class="actions"><button data-action="close">閉じる</button><button data-action="newGame">新しい大会にする</button></div></section></div>`;
- if(showType==="help")return `<div class="overlay" role="dialog" aria-modal="true"><section class="panel"><h2>🎙️ 声で進める操作</h2><p>「説明終わった」→本番のお題へ</p><p>「次のお題」→同じゲームの新しい問題</p><p>「次のゲーム」→次の競技の例題から</p><p>「もう一度」→同じ案内を読む</p><p>「チーム1に5点」→得点加算</p><p>「順位を教えて」→現在の得点を読み上げ</p><p>「もっと簡単に」→新しいお題案を生成</p><p>音声認識が使えない場合は「文字で話す」を利用してね。</p><div class="actions"><button data-action="close">閉じる</button><button data-action="newGame">新しい大会にする</button></div></section></div>`;
+ if(showType==="help")return `<div class="overlay" role="dialog" aria-modal="true"><section class="panel"><h2>🎙️ 声で進める操作</h2><p>「説明終わった」→本番のお題へ</p><p>「次のお題」→同じゲームの新しい問題</p><p>「次のゲーム」→次の競技の例題から</p><p>「もう一度」→同じ案内を読む</p><p>「チーム1に5点」→得点加算</p><p>「順位を教えて」→現在の得点を読み上げ</p><p>「もっと簡単に」→新しいお題案を生成</p><p>音声認識が使えない場合は「文字で話す」を利用してね。</p><div class="actions"><button data-action="listen">🎙️ マイク再開</button><button data-action="text">✏️ 文字で話す</button><button data-action="scores">🏆 得点</button><button data-action="close">閉じる</button><button data-action="newGame">新しい大会にする</button></div></section></div>`;
  return "";
 }
 function render(){
@@ -62,7 +62,7 @@ function render(){
  <div class="character-area">${avatarSVG}<div class="status ${speaking?"talking":recognizerBusy?"listening":""}">${escapeHTML(statusText)}</div></div>
  <div class="speech"><p>${escapeHTML(avatarText)}</p></div></div>
  <div class="foot">
- ${!state.started?`<button class="primary" data-action="openSetup">はじめる</button>`:`<button class="mint" data-action="listen">${micDenied?"マイクを再確認":activated?"🎙️ 聞き取りを再開":"🎙️ 声で始める"}</button><button data-action="text">文字で話す</button><button data-action="scores">🏆 得点</button>`}
+ ${!state.started?`<button class="primary" data-action="openSetup">はじめる</button>`:activated&&!micDenied?`<span class="hint">🌸 もこに話しかけてね</span>`:`<button class="mint" data-action="listen">🎙️ マイクを再開</button><button data-action="text">文字で話す</button>`}
  </div><p class="hint">${state.started?"「説明終わった」「次のお題」など、アバターに話しかけてね。":"マイクの利用は最初の一度だけ確認します。"}</p>
  ${overlay()}${textPanel?`<form class="input-fallback" id="textForm"><input id="textLine" placeholder="スタッフの返事を入力" maxlength="230" aria-label="文字で返事"><button type="submit">伝える</button><button type="button" data-action="text">閉じる</button></form>`:""}`;
 }
@@ -211,8 +211,8 @@ function handle(action){
  case "scores":showType="scores";render();break;
  case "help":showType="help";render();break;
  case "close":showType="";render();break;
- case "text":textPanel=!textPanel;render();break;
- case "listen":activated=true;listeningWanted=true;micDenied=false;try{window.speechSynthesis?.cancel?.();}catch{}speaking=false;render();queueListen();break;
+ case "text":showType="";textPanel=!textPanel;render();break;
+ case "listen":showType="";activated=true;listeningWanted=true;micDenied=false;try{window.speechSynthesis?.cancel?.();}catch{}speaking=false;render();queueListen();break;
  case "newGame":if(window.confirm("現在の得点を消して、新しい大会を始めますか？")){const staff=state.staff;state=empty();state.staff=staff;activated=false;listeningWanted=false;stopListening();showType="";showSetup=true;persist();render()}break;
  }}
 document.addEventListener("click",e=>{const b=e.target?.closest?.("[data-action]");if(b)handle(b.dataset.action)});
