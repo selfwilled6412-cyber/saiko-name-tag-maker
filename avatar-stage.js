@@ -201,6 +201,7 @@ async function begin(){
  state.staff=String(staffInput?.value||"スタッフ").trim().slice(0,14)||"スタッフ";
  state.started=true;state.phase="intro";state.gameIndex=0;state.questionNumber=0;state.recent=[];state.question=null;
  activated=true;listeningWanted=true;micDenied=false;showSetup=false;persist();render();
+ try{if(window.navigator?.mediaDevices?.getUserMedia){const audio=await window.navigator.mediaDevices.getUserMedia({audio:true});audio.getTracks?.().forEach(track=>track.stop());}}catch{micDenied=true;activated=false;listeningWanted=false;}
  await showExample();
 }
 function handle(action){
