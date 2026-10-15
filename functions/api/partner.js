@@ -31,14 +31,17 @@ async function onRequestPost({request,env}){
  try{
   const out=await env.AI.run("@cf/qwen/qwen3-30b-a3b-fp8",{
    messages:[{role:"system",content:kind==="chat"?basePrompt:draftPrompt},...history,{role:"user",content:instructions+(kind==="chat"?"今回はスタッフとの相談として自然に返事をし、お題は確定しない。":"相談内容に合う新しいお題案を作ってください。")}],
-   max_tokens:kind==="chat"?260:900,temperature:kind==="chat"?0.55:0.69,top_p:0.87
+   max_tokens:kind==="chat"?170:800,temperature:kind==="chat"?0.35:0.62,top_p:0.85,
+   ...(kind==="draft"?{response_format:{type:"json_schema",json_schema:{type:"object",properties:{reply:{type:"string"},title:{type:"string"},prompt:{type:"string"},options:{type:"array",items:{type:"string"}},evidence:{type:"string"},criterion:{type:"string"}},required:["reply","title","prompt","options","evidence","criterion"]}}}:{})
   });
-  const raw=String(out?.response||out?.result?.response||out?.choices?.[0]?.message?.content||"").replace(/<think>[\s\S]*?<\/think>/g,"").trim();
+  const responseValue=out?.response||out?.result?.response||out?.choices?.[0]?.message?.content||"";
+  const raw=(typeof responseValue==="string"?responseValue:JSON.stringify(responseValue)).replace(/<think>[\s\S]*?<\/think>/g,"").trim();
   if(kind==="chat"){
    if(!raw)throw Error("empty");
-   return replyJSON({kind,provider:"workers-ai",reply:raw.replace(/<[^>]*>/g,"").slice(0,390)});
+   const clean=raw.replace(/<[^>]*>/g,"").replace(/^\s*(もこ|AI|アシスタント)\s*[:：]\s*/,"").split(/\n\s*(スタッフ|司会者|ユーザー)\s*[:：]/)[0].trim();
+   return replyJSON({kind,provider:"workers-ai",reply:clean.slice(0,245)});
   }
-  const obj=parseJSON(raw),prompt=String(obj.prompt||"").trim().slice(0,220);
+  const obj=typeof responseValue==="object"&&responseValue!==null?responseValue:parseJSON(raw),prompt=String(obj.prompt||"").trim().slice(0,220);
   const options=Array.isArray(obj.options)?obj.options.slice(0,2).map(x=>String(x||"").trim().slice(0,80)).filter(Boolean):[];
   if(!prompt)throw Error("empty_prompt");
   if(["sync","choice"].includes(mode)&&(options.length!==2||options[0]===options[1]))throw Error("options");
@@ -46,7 +49,7 @@ async function onRequestPost({request,env}){
   return replyJSON({kind,provider:"workers-ai",
    reply:String(obj.reply||"この案、どうかな？ 変えたいところがあれば教えてね。").slice(0,160),
    draft:{mode,title:String(obj.title||"おバカチャレンジ").slice(0,48),prompt,options,evidence:String(obj.evidence||"").slice(0,140),criterion:String(obj.criterion||"").slice(0,140)}});
- }catch{return replyJSON({error:"AI_UNAVAILABLE",message:"AIと通信できませんでした。"},503)}
+ }catch(error){return replyJSON({error:"AI_UNAVAILABLE",reason:String(error?.message||"unknown").slice(0,80)},503)}
 }
 function onRequestGet(){return replyJSON({error:"method_not_allowed"},405)}
 
