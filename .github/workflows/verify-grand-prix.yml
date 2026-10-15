@@ -36,3 +36,5 @@ jobs:
         run: node qa/studio-live.mjs
       - name: Verify cute-game preview and Cloudflare staff conversation
         run: node qa/v4-live.mjs
+      - name: Verify voice avatar preview is published
+        run: node qa/avatar-live.mjs
