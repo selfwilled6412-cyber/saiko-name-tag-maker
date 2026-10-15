@@ -134,7 +134,7 @@ function newsGenerator(){const headlines=["世界大会の審査員、あまり�
 function renderAudience(){
  if(!projecting){audience.classList.remove("on");audience.innerHTML="";return;}
  const q=s.item||{};audience.classList.add("on");
- audience.innerHTML='<button class="button close" data-action="project">✕ スタッフ画面に戻る</button><div class="label">SAIKO WORLD GRAND PRIX · '+esc(modeName(q.mode||s.mode))+'</div><h2>'+esc(q.title||"勝負開始！")+'</h2><div class="question">'+esc(q.prompt||"競技を選んでね！")+'</div>'+(q.options?.length===2?'<div class="options">'+q.options.map((v,i)=>'<div class="option"><b>'+("AB"[i])+'</b>'+esc(v)+'</div>').join("")+'</div>':"")+'<div class="scores">'+s.names.map((n,i)=>'<span>'+esc(n)+'：'+s.scores[i]+'pt</span>').join("")+'</div>';
+ audience.innerHTML='<button class="button close" data-action="project">✕ スタッフ画面に戻る</button><div class="label">SAIKO WORLD GRAND PRIX · '+esc(modeName(q.mode||s.mode))+'</div><h2>'+esc(q.title||"勝負開始！")+'</h2><div class="question">'+esc(q.prompt||"競技を選んでね！")+'</div>'+(q.options?.length===2?'<div class="options">'+q.options.map((v,i)=>'<div class="option"><b>'+("AB"[i])+'</b>'+esc(v)+'</div>').join("")+'</div>':"")+(s.item?.mode==="court"&&s.evidence?'<div class="evidence" style="font-size:clamp(18px,3.5vw,38px);margin-top:20px;max-width:950px;text-align:center"><strong>⚡ 新証拠！</strong><div>'+esc(s.item.evidence||'新たな証拠が見つかった！')+'</div></div>':"")+'<div class="scores">'+s.names.map((n,i)=>'<span>'+esc(n)+'：'+s.scores[i]+'pt</span>').join("")+'</div>';
 }
 function renderNews(){news.classList.toggle("on",newsVisible);news.innerHTML=newsVisible?'<div class="newscard"><h2>🚨 SAIKO BREAKING NEWS</h2><p>'+esc(newsText)+'</p>'+btn("ニュースを閉じる","news","primary")+'</div>':"";}
 function render(){
@@ -179,7 +179,7 @@ function handleAction(a){
 }
 document.addEventListener("click",event=>{
  const b=event.target.closest("button");if(!b)return;
- if(b.dataset.mode){s.mode=b.dataset.mode;save();render();generate("新しい競技のお題を作って！");return;}
+ if(b.dataset.mode){if(busy)return;s.mode=b.dataset.mode;save();render();generate("新しい競技のお題を作って！");return;}
  if(b.dataset.score!==undefined){score(Number(b.dataset.score),Number(b.dataset.pt));return;}
  if(b.dataset.time!==undefined){setTimer(Number(b.dataset.time));return;}
  if(b.dataset.quick!==undefined){const q=["もっと難しくして！","さらに爆笑できる変な展開にして！","誰でも答えやすく、やさしくして！","次はどうでもよすぎる裁判にして！"][Number(b.dataset.quick)];generate(q);return;}
