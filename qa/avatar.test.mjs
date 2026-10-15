@@ -28,7 +28,7 @@ const fallback=async(request)=>{
  evidence:"新しい証拠が見つかった！",criterion:"正しく答えたチームが勝ち"}})};
 };
 const c={window,document,localStorage:{getItem(k){return db.get(k)||null},setItem(k,v){db.set(k,v)}},fetch:fallback,
- console,Math,Date,JSON,AbortController,setTimeout,clearTimeout,setInterval(){return 0},clearInterval(){}};
+ console,Math,Date,JSON,AbortController,setTimeout(fn,ms){return setTimeout(fn,ms===380?1:ms)},clearTimeout,setInterval(){return 0},clearInterval(){}};
 vm.runInNewContext(script,c,{timeout:2500});
 const state=()=>JSON.parse(db.get('saiko-voice-host-v1'));
 function click(action){handlers.click({target:{closest(){return{dataset:{action}}}}});}
