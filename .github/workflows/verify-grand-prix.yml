@@ -26,3 +26,5 @@ jobs:
         run: node --test qa/smoke.test.mjs qa/studio.test.mjs qa/director.test.mjs
       - name: Verify published Cloudflare Pages contains latest changes
         run: node qa/live-deploy.mjs
+      - name: Verify published game studio and Workers AI endpoint
+        run: node qa/studio-live.mjs
