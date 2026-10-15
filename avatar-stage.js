@@ -79,7 +79,7 @@ function say(text,{after=true}={}){
  const spoken=String(text).replace(/\s+/g," ").trim();
  if(!spoken)return;
  lastSpeech=spoken;avatarText=spoken;speaking=true;statusText="🐰 もこがお話し中";stopListening();render();
- const done=()=>{if(!speaking)return;speaking=false;statusText="🎙️ スタッフの声を待っているよ";render();if(after)queueListen()};
+ const done=()=>{if(!speaking)return;clearTimeout(speakTimer);speaking=false;statusText="🎙️ スタッフの声を待っているよ";render();if(after)queueListen()};
  try{
   if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){done();return}
   window.speechSynthesis.cancel();
