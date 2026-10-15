@@ -1,12 +1,12 @@
 {
-  "name": "サイ校 おバカ世界選手権",
-  "short_name": "サイ校GP",
-  "description": "スタッフとAIが会話してその場でゲームを作るチーム対抗アプリ",
+  "name": "サイ校・おバカ世界選手権",
+  "short_name": "サイ校・もこ",
+  "description": "可愛いゲーム相棒もこと相談しながら、お題を作るチーム対抗ゲーム",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#090d16",
-  "theme_color": "#090d16",
+  "background_color": "#fff9f1",
+  "theme_color": "#fff9f1",
   "icons": [
     {
       "src": "/saiko-icon.svg",
