@@ -14,7 +14,15 @@ AbortController,alert(message){throw Error(message)}};
 vm.runInNewContext(src,sandbox,{timeout:2000});
 const state=()=>JSON.parse(store.get('saiko-grand-prix-studio-v3'));
 function click(dataset){handlers.click({target:{closest(){return {dataset}}}});}
-const settle=()=>new Promise(r=>setTimeout(r,12));
+const settle=()=>new Promise(r=>setTimeout(r,20));
+test('ゲーム開始前に2〜10チームを選べる',async()=>{
+ assert.match(elements.root.innerHTML,/参加チーム数/);
+ assert.match(elements.root.innerHTML,/10チーム/);
+ assert.equal(state().started,false);
+ click({action:'begin'});await settle();
+ assert.equal(state().started,true);
+ assert.equal(state().names.length,3);
+});
 test('起動時に競技一覧、AIチャット、3チームの得点が見える',()=>{
  assert.match(elements.root.innerHTML,/どうでも裁判所/);
  assert.match(elements.root.innerHTML,/ゲームAIと相談/);
@@ -65,4 +73,36 @@ test('新大会で過去の得点と議事録がクリアされる',()=>{
  click({action:'reset'});
  assert.deepEqual(Array.from(state().scores),[0,0,0]);
  assert.deepEqual(Array.from(state().ledger),[]);
+});
+
+test('2チーム裁判ではスタッフが判定、余分な審判チームへの得点はない',async()=>{
+ click({action:'reset'});
+ assert.equal(state().started,false);
+ handlers.change({target:{id:'teamCount',value:'2',dataset:{}}});
+ assert.equal(state().names.length,2);
+ click({action:'begin'});await settle();
+ click({mode:'court'});await settle();
+ assert.match(elements.root.innerHTML,/司会スタッフ/);
+ click({action:'verdictPro'});
+ assert.deepEqual(Array.from(state().scores),[3,1]);
+ assert.equal(state().courtRound,1);
+ click({action:'undo'});
+ assert.deepEqual(Array.from(state().scores),[0,0]);
+});
+test('10チームでは全チームを表示し、裁判3役が循環して公平に交代',async()=>{
+ click({action:'reset'});
+ handlers.change({target:{id:'teamCount',value:'10',dataset:{}}});
+ assert.equal(state().names.length,10);
+ click({action:'begin'});await settle();
+ assert.equal(state().scores.length,10);
+ assert.match(elements.root.innerHTML,/10チーム/);
+ assert.match(elements.root.innerHTML,/チーム10/);
+ click({mode:'court'});await settle();
+ for(let k=0;k<10;k++){
+  if(k){click({action:'newPrompt'});await settle();}
+  click({action:'verdictPro'});
+ }
+ assert.deepEqual(Array.from(state().scores),Array(10).fill(6));
+ assert.equal(state().courtRound,10);
+ assert.match(elements.root.innerHTML,/10位|🥉/);
 });
