@@ -49,7 +49,7 @@ async function onRequestPost({request,env}){
   if(mode==="court"&&!String(obj.evidence||"").trim())throw Error("evidence");
   return replyJSON({kind,provider:"workers-ai",
    reply:String(obj.reply||"この案、どうかな？ 変えたいところがあれば教えてね。").slice(0,160),
-   draft:{mode,title:String(obj.title||"おバカチャレンジ").slice(0,48),prompt,options,evidence:String(obj.evidence||"").slice(0,140),criterion:mode==="court"?"検察と弁護の言い分を聞き、判定役が勝訴側を決めます。":String(obj.criterion||"").slice(0,140)}});
+   draft:{mode,title:String(obj.title||"わくわくチャレンジ").slice(0,48),prompt,options,evidence:String(obj.evidence||"").slice(0,140),criterion:mode==="court"?"検察と弁護の言い分を聞き、判定役が勝訴側を決めます。":String(obj.criterion||"").slice(0,140)}});
  }catch(error){return replyJSON({error:"AI_UNAVAILABLE",reason:String(error?.message||"unknown").slice(0,80)},503)}
 }
 function onRequestGet(){return replyJSON({error:"method_not_allowed"},405)}
