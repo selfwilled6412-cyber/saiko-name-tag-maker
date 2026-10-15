@@ -1,10 +1,17 @@
 const base='https://saiko-world-grand-prix.pages.dev';
 const files=[['/','game-v3.js'],['/studio.html','game-v3.js'],['/game-v3.js','何チームで勝負する？'],['/game-v3.css','.setup-names'],['/host-cue-sheet.html','司会スタッフ専用カンペ'],['/manifest.webmanifest','standalone']];
 for(const [path,marker] of files){
- const r=await fetch(base+path+'?v='+Date.now(),{signal:AbortSignal.timeout(12000)});
- const txt=await r.text();
- const result=r.status===200&&txt.includes(marker);
- console.log(path,'HTTP',r.status,'bytes',txt.length,'marker',result?'PASS':'FAIL');
+ let result=false,lastStatus=0,lastSize=0;
+ for(let attempt=0;attempt<12;attempt++){
+  try{
+   const r=await fetch(base+path+'?v='+Date.now()+'-'+attempt,{signal:AbortSignal.timeout(12000)});
+   const txt=await r.text();lastStatus=r.status;lastSize=txt.length;
+   result=r.status===200&&txt.includes(marker);
+  }catch(e){lastStatus=0;lastSize=0;}
+  if(result)break;
+  if(attempt<11)await new Promise(resolve=>setTimeout(resolve,4500));
+ }
+ console.log(path,'HTTP',lastStatus,'bytes',lastSize,'marker',result?'PASS':'FAIL');
  if(!result)process.exitCode=1;
 }
 try{
