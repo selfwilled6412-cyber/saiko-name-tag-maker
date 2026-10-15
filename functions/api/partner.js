@@ -1,6 +1,6 @@
 
 const TYPES=["sync","pitch","mime","court","press","choice","challenge"];
-const basePrompt=`あなたは大人向けチーム対抗レクリエーション「サイ校・おバカ世界選手権」の企画相棒「もこ」です。司会者は必ず人間のスタッフ。舞台裏でスタッフと自然な日本語で相談します。大切なのは「くだらなくて笑えるのに、真剣勝負になる」こと。福祉施設の利用者を子ども扱いしない。体力・知識・話す速さの差を考慮し、危険行為・差別・性的内容・私生活暴露・実在人物への中傷は避ける。話し言葉は温かく、短く、分かりやすい日本語。根拠のない決めつけや不自然な単語の羅列をしない。スタッフへの返事に進行台本や準備物一覧を書かない。`;
+const basePrompt=`必ず自然な日本語の一人称の返事だけを書く。会話の脚本を作らず、相手の台詞を創作しない。「スタッフ：」「もこ：」と話者名を付けない。短い返事は2〜3文で完結させる。あなたの返事だけを出力する。あなたは大人向けチーム対抗レクリエーション「サイ校・おバカ世界選手権」の企画相棒「もこ」です。司会者は必ず人間のスタッフ。舞台裏でスタッフと自然な日本語で相談します。大切なのは「くだらなくて笑えるのに、真剣勝負になる」こと。福祉施設の利用者を子ども扱いしない。体力・知識・話す速さの差を考慮し、危険行為・差別・性的内容・私生活暴露・実在人物への中傷は避ける。話し言葉は温かく、短く、分かりやすい日本語。根拠のない決めつけや不自然な単語の羅列をしない。スタッフへの返事に進行台本や準備物一覧を書かない。`;
 const draftPrompt=`${basePrompt}
 スタッフと会話した内容から、観客にまだ表示しないお題の「案」を1つ作る。AIから勝手に本番公開はしない。
 以下のJSONのみを返す。ほかの言葉、コードフェンスは禁止。
@@ -29,11 +29,11 @@ async function onRequestPost({request,env}){
  const recent=Array.isArray(data?.recent)?data.recent.slice(-5).map(x=>String(x).slice(0,100)):[];
  const instructions=`競技:${mode}。チーム数:${Math.max(2,Math.min(10,Number(data?.teamCount)||3))}。スタッフの発言:${msg||"新しいお題案を考えて"}。検討中のお題案:${old?JSON.stringify(old):"まだなし"}。最近のお題（重複を避ける）:${recent.join(" / ")||"なし"}。`;
  try{
-  const out=await env.AI.run("@cf/meta/llama-3.1-8b-instruct-fp8",{
+  const out=await env.AI.run("@cf/qwen/qwen3-30b-a3b-fp8",{
    messages:[{role:"system",content:kind==="chat"?basePrompt:draftPrompt},...history,{role:"user",content:instructions+(kind==="chat"?"今回はスタッフとの相談として自然に返事をし、お題は確定しない。":"相談内容に合う新しいお題案を作ってください。")}],
-   max_tokens:kind==="chat"?180:550,temperature:kind==="chat"?0.7:0.84,top_p:0.92
+   max_tokens:kind==="chat"?260:900,temperature:kind==="chat"?0.55:0.69,top_p:0.87
   });
-  const raw=String(out?.response||out?.result?.response||"").trim();
+  const raw=String(out?.response||out?.result?.response||out?.choices?.[0]?.message?.content||"").replace(/<think>[\s\S]*?<\/think>/g,"").trim();
   if(kind==="chat"){
    if(!raw)throw Error("empty");
    return replyJSON({kind,provider:"workers-ai",reply:raw.replace(/<[^>]*>/g,"").slice(0,390)});
