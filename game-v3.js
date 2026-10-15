@@ -27,8 +27,8 @@ const pools={
  virtues:["時間を3時間だけ止める","動物と1時間しゃべれる","空を30秒だけ飛べる","毎朝好きなBGMで目覚める","一日だけ世界一の料理人になる","透明人間に10分なる","いつでも快適な室温にできる"],
  costs:["靴下が一生片方だけになる","笑うたびに効果音が出る","毎日同じ昼食になる","くしゃみがニュース速報になる","名字が一日だけ『おにぎり』になる","すべての会話が敬語になる"]
 };
-function first(){return{names:["チーム・バナナ","チーム・パンダ","チーム・カッパ"],scores:[0,0,0],ledger:[],round:0,courtRound:0,mode:"sync",item:null,history:[],chat:[{who:"ai",text:"こんにちは！種目を選んで、スタッフから相談してね。「もっと難しく」「今度は裁判」でも大丈夫。毎回新しいお題を考えるよ！"}],volume:false,source:"",evidence:false,ruled:false};}
-let s;try{s={...first(),...JSON.parse(localStorage.getItem(KEY)||"{}")};if(!Array.isArray(s.scores)||s.scores.length!==3||!Array.isArray(s.names)||s.names.length!==3)s=first();}catch{s=first();}
+function first(){return{names:["チーム・バナナ","チーム・パンダ","チーム・カッパ"],scores:[0,0,0],started:false,ledger:[],round:0,courtRound:0,mode:"sync",item:null,history:[],chat:[{who:"ai",text:"こんにちは！種目を選んで、スタッフから相談してね。「もっと難しく」「今度は裁判」でも大丈夫。毎回新しいお題を考えるよ！"}],volume:false,source:"",evidence:false,ruled:false};}
+let s;try{const saved=JSON.parse(localStorage.getItem(KEY)||"null");s={...first(),...(saved||{})};if(saved&&!Object.prototype.hasOwnProperty.call(saved,"started"))s.started=true;if(!Array.isArray(s.names)||s.names.length<2||s.names.length>10||!Array.isArray(s.scores)||s.scores.length!==s.names.length)s=first();if(!Array.isArray(s.ledger))s.ledger=[];}catch{s=first();}
 try{if(!s.item){const old=JSON.parse(localStorage.getItem("saiko-world-cup-v2")||"null");if(old?.names?.length===3)s.names=old.names.map(x=>String(x).slice(0,22));}}catch{}
 let recent=[];try{recent=JSON.parse(localStorage.getItem(HISTORY_KEY)||"[]");if(!Array.isArray(recent))recent=[];}catch{}
 let busy=false,voiceRec=null,voiceActive=false,timerDuration=60,timerRemaining=60,timerRunning=false,timerDeadline=0,installEvent=null,projecting=false,newsVisible=false,newsText="",requestSeq=0;
@@ -91,11 +91,12 @@ async function generate(message="次のお題を考えて"){
  const log=document.getElementById("chatlog");if(log)log.scrollTop=log.scrollHeight;
  if(s.volume&&window.speechSynthesis&&/音声|しゃべって|声で/.test(message)){window.speechSynthesis.cancel();let utterance=new SpeechSynthesisUtterance(reply);utterance.lang="ja-JP";window.speechSynthesis.speak(utterance);}
 }
-function score(i,pt,reason){const name=s.names[i];s.scores[i]=Math.max(0,s.scores[i]+pt);s.ledger.push({changes:[{i,delta:pt}],title:reason||s.item?.title||"得点",at:Date.now()});s.ledger=s.ledger.slice(-120);save();render();beeps()}
+function score(i,pt,reason){if(!s.started||!Number.isInteger(i)||i<0||i>=s.names.length||![1,3,5].includes(pt))return;const name=s.names[i];s.scores[i]=Math.max(0,s.scores[i]+pt);s.ledger.push({changes:[{i,delta:pt}],title:reason||s.item?.title||"得点",at:Date.now()});s.ledger=s.ledger.slice(-120);save();render();beeps()}
 function verdict(side){
- if(!s.item||s.item.mode!=="court"||s.ruled)return;
- const i=s.courtRound%3,j=(s.courtRound+1)%3,k=(s.courtRound+2)%3,w=side==="pro"?i:j,l=side==="pro"?j:i;
- const changes=[{i:w,delta:3},{i:l,delta:1},{i:k,delta:2}];
+ if(!s.started||!s.item||s.item.mode!=="court"||s.ruled)return;
+ const [i,j,k]=roles(),w=side==="pro"?i:j,l=side==="pro"?j:i;
+ const changes=[{i:w,delta:3},{i:l,delta:1}];
+ if(k>=0)changes.push({i:k,delta:2});
  changes.forEach(v=>s.scores[v.i]+=v.delta);
  s.ledger.push({changes,title:"第"+(s.courtRound+1)+"回裁判",at:Date.now()});s.courtRound++;s.ruled=true;save();render();beeps();
 }
@@ -106,8 +107,21 @@ function undo(){
  save();render();
 }
 function reset(){
- if(!window.confirm("新しい大会を始める？\n現在のチーム名・得点・勝負履歴を初期化します。"))return;
- const names=s.names.slice();s=first();s.names=names;recent=[];requestSeq++;busy=false;newsVisible=false;projecting=false;timerRunning=false;timerRemaining=timerDuration;save();render();
+ if(!window.confirm("新しい大会を始める？\n得点と勝負履歴を消して、チーム数選択画面に戻ります。"))return;
+ const names=s.names.slice();s=first();s.names=names;s.scores=Array(names.length).fill(0);recent=[];requestSeq++;busy=false;newsVisible=false;projecting=false;timerRunning=false;timerRemaining=timerDuration;save();render();
+}
+function setTeamCount(count){
+ if(s.started)return;
+ const size=Math.max(2,Math.min(10,Number(count)||3));
+ s.names=Array.from({length:size},(_,i)=>s.names[i]||"チーム"+(i+1));
+ s.scores=Array(size).fill(0);
+ save();render();
+}
+function beginGame(){
+ if(s.started)return;
+ s.started=true;s.scores=Array(s.names.length).fill(0);
+ s.ledger=[];s.courtRound=0;s.ruled=false;s.item=null;s.round=0;s.history=[];s.chat=first().chat;
+ s.evidence=false;recent=[];save();render();generate("新しい大会の最初のお題を作って！");
 }
 function tick(){
  if(timerRunning){timerRemaining=Math.max(0,Math.ceil((timerDeadline-Date.now())/1000));if(!timerRemaining){timerRunning=false;beeps();} }
@@ -117,15 +131,16 @@ function tick(){
 function setTimer(seconds){timerDuration=seconds;timerRemaining=seconds;timerRunning=false;render();}
 function timerToggle(){if(timerRunning){timerRemaining=Math.max(0,Math.ceil((timerDeadline-Date.now())/1000));timerRunning=false;}else{if(timerRemaining<=0)timerRemaining=timerDuration;timerDeadline=Date.now()+timerRemaining*1000;timerRunning=true;}tick();}
 const btn=(text,act,cls="")=>'<button class="button '+cls+'" data-action="'+act+'">'+text+"</button>";
-function scoresMarkup(){return s.scores.map((p,i)=>'<div class="scorecard '+(p===Math.max(...s.scores)&&s.scores.some(v=>v>0)?"leader":"")+'"><input aria-label="チーム名'+(i+1)+'" maxlength="22" data-name="'+i+'" value="'+esc(s.names[i])+'"><strong>'+p+'</strong><small>POINTS</small></div>').join("");}
-function roles(){const n=s.ruled?Math.max(0,s.courtRound-1):s.courtRound;return [n%3,(n+1)%3,(n+2)%3];}
+function scoresMarkup(){return s.scores.map((p,i)=>'<div class="scorecard '+(p===Math.max(...s.scores)&&s.scores.some(v=>v>0)?"leader":"")+'"><input aria-label="チーム名'+(i+1)+'" maxlength="22" data-name="'+i+'" value="'+esc(s.names[i])+'"><strong>'+p+'</strong><small>POINTS</small>'+(s.item?.mode==="court"?"":'<div class="awardrow">'+[5,3,1].map(n=>'<button class="award" data-score="'+i+'" data-pt="'+n+'">+'+n+'</button>').join("")+'</div>')+'</div>').join("");}
+function roles(){const n=s.names.length;const round=s.ruled?Math.max(0,s.courtRound-1):s.courtRound;return [round%n,(round+1)%n,n>2?(round+2)%n:-1];}
+function setupMarkup(){return '<div class="app setup-page"><header class="top"><div class="brand"><div class="brandmark">祭</div><div><small>SAIKO / WORLD GRAND PRIX</small><strong>サイ校・おバカ世界選手権</strong></div></div></header><section class="panel setup-card"><span class="kicker">NEW GAME / TEAM SETUP</span><h1>何チームで勝負する？</h1><p class="fine">2〜10チームから選択。チーム名も自由に変更できます。</p><label for="teamCount" class="count-label">参加チーム数</label><select id="teamCount" aria-label="参加チーム数">'+Array.from({length:9},(_,i)=>i+2).map(n=>'<option value="'+n+'" '+(n===s.names.length?'selected':'')+'>'+n+'チーム</option>').join("")+'</select><div class="setup-names">'+s.names.map((n,i)=>'<label class="setup-name"><span>チーム '+(i+1)+'</span><input maxlength="22" data-name="'+i+'" aria-label="チーム'+(i+1)+'の名前" value="'+esc(n)+'"></label>').join("")+'</div>'+btn("🏁 このチーム数でゲーム開始","begin","primary setup-start")+'</section></div>';}
 function promptMarkup(){
  const item=s.item;
  if(!item)return '<div class="gameframe"><span class="kicker">READY TO PLAY</span><div class="gametitle">今日は何で勝負する？</div><p>競技を選んだら「お題を生成」を押してね！</p></div>';
  let special="";
  if(item.mode==="court"){
   const [pro,def,judge]=roles();
-  special='<div class="courtroles"><div class="courtrole"><small>⚔️ 検察</small><strong>'+esc(s.names[pro])+'</strong></div><div class="courtrole"><small>🛡️ 弁護</small><strong>'+esc(s.names[def])+'</strong></div><div class="courtrole"><small>⚖️ 裁判官</small><strong>'+esc(s.names[judge])+'</strong></div></div><div class="actions">'+btn("⚡ 新証拠を発表","evidence","secondary")+'</div>'+(s.evidence?'<div class="evidence"><strong>🚨 新証拠！</strong><div>'+esc(item.evidence||"新たな目撃者が現れた！")+'</div></div>':"")+(s.ruled?'<div class="criterion">✅ 判決済み！次の事件を作ろう。</div>':'<div class="actions">'+btn("検察側の勝ち","verdictPro","primary")+btn("弁護側の勝ち","verdictDef","secondary")+'</div>');
+  special='<div class="courtroles"><div class="courtrole"><small>⚔️ 検察</small><strong>'+esc(s.names[pro])+'</strong></div><div class="courtrole"><small>🛡️ 弁護</small><strong>'+esc(s.names[def])+'</strong></div><div class="courtrole"><small>⚖️ 判定役</small><strong>'+esc(judge<0?"司会スタッフ":s.names[judge])+'</strong></div></div>'+(s.names.length>3?'<div class="fine">その他のチームは陪審員として予想・投票に参加できます。</div>':"")<div class="actions">'+btn("⚡ 新証拠を発表","evidence","secondary")+'</div>'+(s.evidence?'<div class="evidence"><strong>🚨 新証拠！</strong><div>'+esc(item.evidence||"新たな目撃者が現れた！")+'</div></div>':"")+(s.ruled?'<div class="criterion">✅ 判決済み！次の事件を作ろう。</div>':'<div class="actions">'+btn("検察側の勝ち","verdictPro","primary")+btn("弁護側の勝ち","verdictDef","secondary")+'</div>');
  }
  return '<div class="gameframe"><span class="kicker">ROUND '+s.round+' / '+(s.source==="workers-ai"?"AI LIVE GENERATED":"FRESH GAME")+'</span><div class="gametitle">'+esc(item.title)+'</div><div class="gameprompt">'+esc(item.prompt)+'</div>'+(item.options?.length===2?'<div class="options">'+item.options.map((o,i)=>'<div class="option"><b>'+("AB"[i])+'</b>'+esc(o)+'</div>').join("")+'</div>':"")+(item.mode!=="court"&&item.criterion?'<div class="criterion">判定ルール：'+esc(item.criterion)+'</div>':"")+special+'</div>';
 }
@@ -138,9 +153,10 @@ function renderAudience(){
 }
 function renderNews(){news.classList.toggle("on",newsVisible);news.innerHTML=newsVisible?'<div class="newscard"><h2>🚨 SAIKO BREAKING NEWS</h2><p>'+esc(newsText)+'</p>'+btn("ニュースを閉じる","news","primary")+'</div>':"";}
 function render(){
+ if(!s.started){root.innerHTML=setupMarkup();renderAudience();renderNews();return;}
  const sorted=s.scores.map((v,i)=>({v,i})).sort((a,b)=>b.v-a.v||a.i-b.i);
  const history=s.history.slice(0,4);
- root.innerHTML='<div class="app"><header class="top"><div class="brand"><div class="brandmark">祭</div><div><small>SAIKO / NEVER THE SAME GAME</small><strong>サイ校・おバカ世界選手権</strong></div></div><div class="topactions">'+btn("📺 観客画面","project","primary small")+btn("⋯","menu","small")+'</div></header><div class="headline"><div class="eyebrow">GAME SHOW / REAL-TIME CREATOR</div><h1>くだらない。でも、<span>本気。</span></h1><p>スタッフとゲームAIで、その瞬間だけの勝負を生み出そう。</p></div><div class="main"><div class="column"><section class="panel"><h2>🎮 競技を選ぶ</h2><div class="modegrid">'+MODES.map(x=>'<button class="modebtn '+(s.mode===x.id?"active":"")+'" data-mode="'+x.id+'"><span class="emoji">'+x.icon+'</span>'+x.name+'</button>').join("")+'</div></section><section class="panel"><div class="stagebar" style="justify-content:space-between;margin-bottom:14px"><div><div class="kicker">NOW PLAYING</div><h2 style="margin:6px 0 0">'+esc(modeName(s.mode))+'</h2></div>'+btn(busy?"生成中…":"⚡ 新しいお題！","newPrompt","primary")+'</div>'+promptMarkup()+'<div class="segment"></div><div class="actions">'+btn("📺 大画面に出す","project","secondary")+btn("🚨 緊急ニュース","news","outline")+'</div></section><section class="panel"><div class="stagebar" style="justify-content:space-between"><h2>🏆 チーム得点</h2><span class="kicker">LIVE RANKING</span></div><div class="scorecards">'+scoresMarkup()+'</div><div class="fine" style="margin-top:12px">各チームの獲得点を押して加算（裁判は判決と同時に自動加算）。</div>'+(s.item?.mode==="court"?"":'<div class="teams">'+s.names.map((n,i)=>'<div style="flex:1;min-width:100px"><div class="fine">'+esc(n)+'</div><div class="awardrow">'+[5,3,1].map(n=>'<button class="award" data-score="'+i+'" data-pt="'+n+'">+'+n+'</button>').join("")+'</div></div>').join("")+'</div>')+'<div class="actions" style="margin-top:14px">'+btn("↶ 最後の採点を戻す","undo","small outline")+'</div></section></div><div class="column">'+staffChat()+'<section class="panel"><h2>⏱️ タイマー</h2><div class="timer" id="timerDigits">01:00</div><div class="actions">'+btn("▶ スタート","timer","primary")+btn("↻ 戻す","timerReset","outline")+'</div><div class="chips" style="margin-top:11px">'+[30,60,90,120].map(t=>'<button class="button small '+(timerDuration===t?"secondary":"outline")+'" data-time="'+t+'">'+t+'秒</button>').join("")+'</div></section><section class="panel"><div class="stagebar" style="justify-content:space-between"><h2>📊 現在の順位</h2><span class="kicker">'+s.ledger.length+' RESULTS</span></div><div class="history">'+sorted.map((x,i)=>'<div class="historyrow"><b>'+["🥇","🥈","🥉"][i]+' '+esc(s.names[x.i])+'</b><b>'+x.v+' pt</b></div>').join("")+'</div>'+(history.length?'<div class="segment"></div><div class="kicker">最近のゲーム</div><div class="history">'+history.map(x=>'<div class="historyrow">'+esc(x.title)+' <small>#'+x.round+'</small></div>').join("")+'</div>':"")+'</section><section class="panel" id="optionsMenu"><h2>⚙️ 大会設定</h2><div class="actions">'+btn(s.volume?"🔊 音声ON":"🔇 音声OFF","volume","small")+btn("📲 ホーム画面に追加","install","small")+btn("🆕 新大会","reset","danger small")+'</div><div class="fine" style="margin-top:12px">得点と生成済みのお題は、この端末に自動保存。スタッフの入力内容はAI生成時にCloudflareへ送信されます。個人情報は入力しないでね。</div></section></div></div><div class="footer">© サイ校プロジェクト岩国 · お題は毎回生成 · 司会はスタッフ · 有料課金なしの構成</div></div>';
+ root.innerHTML='<div class="app"><header class="top"><div class="brand"><div class="brandmark">祭</div><div><small>SAIKO / NEVER THE SAME GAME</small><strong>サイ校・おバカ世界選手権</strong></div></div><div class="topactions">'+btn("📺 観客画面","project","primary small")+btn("⋯","menu","small")+'</div></header><div class="headline"><div class="eyebrow">GAME SHOW / REAL-TIME CREATOR</div><h1>くだらない。でも、<span>本気。</span></h1><p>スタッフとゲームAIで、その瞬間だけの勝負を生み出そう。</p></div><div class="main"><div class="column"><section class="panel"><h2>🎮 競技を選ぶ</h2><div class="modegrid">'+MODES.map(x=>'<button class="modebtn '+(s.mode===x.id?"active":"")+'" data-mode="'+x.id+'"><span class="emoji">'+x.icon+'</span>'+x.name+'</button>').join("")+'</div></section><section class="panel"><div class="stagebar" style="justify-content:space-between;margin-bottom:14px"><div><div class="kicker">NOW PLAYING</div><h2 style="margin:6px 0 0">'+esc(modeName(s.mode))+'</h2></div>'+btn(busy?"生成中…":"⚡ 新しいお題！","newPrompt","primary")+'</div>'+promptMarkup()+'<div class="segment"></div><div class="actions">'+btn("📺 大画面に出す","project","secondary")+btn("🚨 緊急ニュース","news","outline")+'</div></section><section class="panel"><div class="stagebar" style="justify-content:space-between"><h2>🏆 チーム得点</h2><span class="kicker">LIVE RANKING</span></div><div class="scorecards">'+scoresMarkup()+'</div><div class="actions" style="margin-top:14px">'+btn("↶ 最後の採点を戻す","undo","small outline")+'</div></section></div><div class="column">'+staffChat()+'<section class="panel"><h2>⏱️ タイマー</h2><div class="timer" id="timerDigits">01:00</div><div class="actions">'+btn("▶ スタート","timer","primary")+btn("↻ 戻す","timerReset","outline")+'</div><div class="chips" style="margin-top:11px">'+[30,60,90,120].map(t=>'<button class="button small '+(timerDuration===t?"secondary":"outline")+'" data-time="'+t+'">'+t+'秒</button>').join("")+'</div></section><section class="panel"><div class="stagebar" style="justify-content:space-between"><h2>📊 現在の順位</h2><span class="kicker">'+s.ledger.length+' RESULTS</span></div><div class="history">'+sorted.map((x,i)=>'<div class="historyrow"><b>'+(["🥇","🥈","🥉"][i]||(i+1)+"位")+' '+esc(s.names[x.i])+'</b><b>'+x.v+' pt</b></div>').join("")+'</div>'+(history.length?'<div class="segment"></div><div class="kicker">最近のゲーム</div><div class="history">'+history.map(x=>'<div class="historyrow">'+esc(x.title)+' <small>#'+x.round+'</small></div>').join("")+'</div>':"")+'</section><section class="panel" id="optionsMenu"><h2>⚙️ 大会設定 · '+s.names.length+'チーム</h2><div class="actions">'+btn(s.volume?"🔊 音声ON":"🔇 音声OFF","volume","small")+btn("📲 ホーム画面に追加","install","small")+btn("🆕 新大会","reset","danger small")+'</div><div class="fine" style="margin-top:12px">得点と生成済みのお題は、この端末に自動保存。スタッフの入力内容はAI生成時にCloudflareへ送信されます。個人情報は入力しないでね。</div></section></div></div><div class="footer">© サイ校プロジェクト岩国 · お題は毎回生成 · 司会はスタッフ · 有料課金なしの構成</div></div>';
  tick();renderAudience();renderNews();
 }
 function sendChat(){const el=document.getElementById("chatInput");const text=el?.value?.trim();if(text)generate(text);}
@@ -173,6 +189,7 @@ function handleAction(a){
   case "timerReset":timerRunning=false;timerRemaining=timerDuration;tick();break;
   case "volume":s.volume=!s.volume;save();render();break;
   case "reset":reset();break;
+  case "begin":beginGame();break;
   case "install":install();break;
   case "menu":document.getElementById("optionsMenu")?.scrollIntoView({behavior:"smooth"});break;
  }
@@ -185,9 +202,9 @@ document.addEventListener("click",event=>{
  if(b.dataset.quick!==undefined){const q=["もっと難しくして！","さらに爆笑できる変な展開にして！","誰でも答えやすく、やさしくして！","次はどうでもよすぎる裁判にして！"][Number(b.dataset.quick)];generate(q);return;}
  if(b.dataset.action)handleAction(b.dataset.action);
 });
-document.addEventListener("change",event=>{if(event.target.dataset.name===undefined)return;const i=Number(event.target.dataset.name);s.names[i]=event.target.value.trim().slice(0,22)||"チーム"+(i+1);save();render()});
+document.addEventListener("change",event=>{if(event.target.id==="teamCount"){setTeamCount(event.target.value);return;}if(event.target.dataset.name===undefined)return;const i=Number(event.target.dataset.name);if(!Number.isInteger(i)||i<0||i>=s.names.length)return;s.names[i]=event.target.value.trim().slice(0,22)||"チーム"+(i+1);save();render()});
 document.addEventListener("keydown",event=>{if(event.target.id==="chatInput"&&event.key==="Enter"&&(event.ctrlKey||event.metaKey)){event.preventDefault();sendChat();}if(event.key==="Escape"&&projecting){projecting=false;renderAudience();}});
 setInterval(tick,150);
-if(!s.item){s.item=makeLocal(s.mode);s.source="rules";s.round=1;s.history=[{...s.item,round:1}];recent.push(s.item.prompt);save();}
+if(s.started&&!s.item){s.item=makeLocal(s.mode);s.source="rules";s.round=1;s.history=[{...s.item,round:1}];recent.push(s.item.prompt);save();}
 render();
 })();
