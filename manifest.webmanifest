@@ -1,12 +1,12 @@
 {
-  "name": "サイ校・おバカ世界選手権",
-  "short_name": "サイ校・もこ",
-  "description": "可愛いゲーム相棒もこと相談しながら、お題を作るチーム対抗ゲーム",
+  "name": "サイ校 わくわくゲームショー",
+  "short_name": "サイ校ゲーム",
+  "description": "アバターのもこが声でゲームを案内。スタッフの声を聞き、例題と本番のお題を進めます",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#fff9f1",
-  "theme_color": "#fff9f1",
+  "background_color": "#fff7ee",
+  "theme_color": "#fff7ee",
   "icons": [
     {
       "src": "/saiko-icon.svg",
