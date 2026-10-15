@@ -1,6 +1,6 @@
 // Cloudflare Pages の公開内容が GitHub の最新版と一致するか確認する。
 const url='https://saiko-world-grand-prix.pages.dev/?qa='+Date.now();
-const marker='game-v4.js';
+const marker='avatar-stage.js';
 let last='';
 for(let i=0;i<18;i++){
  try{
