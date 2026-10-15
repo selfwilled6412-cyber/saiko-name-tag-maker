@@ -206,5 +206,5 @@ document.addEventListener("change",event=>{if(event.target.id==="teamCount"){set
 document.addEventListener("keydown",event=>{if(event.target.id==="chatInput"&&event.key==="Enter"&&(event.ctrlKey||event.metaKey)){event.preventDefault();sendChat();}if(event.key==="Escape"&&projecting){projecting=false;renderAudience();}});
 setInterval(tick,150);
 if(s.started&&!s.item){s.item=makeLocal(s.mode);s.source="rules";s.round=1;s.history=[{...s.item,round:1}];recent.push(s.item.prompt);save();}
-render();
+save();render();
 })();
