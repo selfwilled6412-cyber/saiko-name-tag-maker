@@ -36,9 +36,11 @@ const window={
 
 const adminTeams={value:"5"};
 const adminStaff={value:"吉村"};
+const adminVoice={value:"Microsoft Nanami"};
+const adminCommand={value:""};
 const document={
  hidden:false,
- getElementById(id){if(id==="stage")return markup;if(id==="adminTeams")return adminTeams;if(id==="adminStaff")return adminStaff;return null},
+ getElementById(id){if(id==="stage")return markup;if(id==="adminTeams")return adminTeams;if(id==="adminStaff")return adminStaff;if(id==="adminVoice")return adminVoice;if(id==="adminCommand")return adminCommand;return null},
  addEventListener(type,callback){(handlers[type]??=[]).push(callback)}
 };
 
@@ -80,6 +82,7 @@ async function voice(text){
 
 test("通常画面はアバターだけで、文字・字幕・操作ボタンを見せない",()=>{
  assert.match(markup.innerHTML,/coach-avatar\.png/);
+ assert.match(markup.innerHTML,/coach-avatar-speaking\.png/);
  assert.match(markup.innerHTML,/start-surface/);
  assert.doesNotMatch(markup.innerHTML,/class="speech"|class="brand"|game-info|tiny-menu|おバカ|字幕/);
  assert.doesNotMatch(markup.innerHTML,/管理・復旧/);
@@ -135,6 +138,28 @@ test("長押し時だけ管理・復旧メニューを表示する",async()=>{
  await wait(10);
  assert.match(markup.innerHTML,/管理・復旧/);
  assert.match(markup.innerHTML,/マイク再開/);
+ assert.match(markup.innerHTML,/adminCommand/);
+ assert.match(markup.innerHTML,/adminVoice/);
  click("closeAdmin");
  assert.doesNotMatch(markup.innerHTML,/管理・復旧/);
+});
+
+test("隠し文字入力を音声と同じ命令として実行できる",async()=>{
+ dispatch("pointerdown",{target:{closest(){return null}},clientX:20,clientY:20});
+ await wait(10);
+ adminCommand.value="説明終わったよ";
+ dispatch("submit",{target:{id:"commandForm"},preventDefault(){}});
+ await wait();
+ assert.equal(state().phase,"live");
+ assert.doesNotMatch(markup.innerHTML,/管理・復旧/);
+});
+
+test("隠し画面で日本語音声を選び、試聴できる",async()=>{
+ dispatch("pointerdown",{target:{closest(){return null}},clientX:20,clientY:20});
+ await wait(10);
+ click("previewVoice");
+ await wait();
+ assert.equal(db.get("saiko-voice-choice-v1"),"Microsoft Nanami");
+ assert.match(utterances.join(""),/いっしょに楽しみましょう/);
+ click("closeAdmin");
 });

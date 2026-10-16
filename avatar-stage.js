@@ -52,6 +52,7 @@ const examples={
 const root=document.getElementById("stage");
 const saveKey="saiko-voice-host-v2";
 const legacyKey="saiko-voice-host-v1";
+const voiceKey="saiko-voice-choice-v1";
 const empty=()=>({
  started:false,phase:"ready",gameIndex:0,questionNumber:0,
  names:["チーム1","チーム2","チーム3"],scores:[0,0,0],staff:"吉村",
@@ -84,6 +85,8 @@ let showAdmin=false;
 let pending=null;
 let holdTimer=0;
 let holdStart=null;
+let selectedVoice="";
+try{selectedVoice=String(localStorage.getItem(voiceKey)||"")}catch{}
 
 const escapeHTML=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
 const norm=value=>String(value||"").normalize("NFKC").toLowerCase().replace(/[\s、。！？!?,.・「」『』（）()]/g,"");
@@ -94,6 +97,8 @@ const isMatch=(value,parts)=>parts.some(part=>value.includes(part));
 function adminMarkup(){
  if(!showAdmin)return "";
  const scoreRows=state.names.map((name,index)=>`<div class="score-row"><span>${escapeHTML(name)}　<strong>${state.scores[index]}点</strong></span><span><button data-action="score" data-team="${index}" data-points="1">+1</button><button data-action="score" data-team="${index}" data-points="3">+3</button><button data-action="score" data-team="${index}" data-points="5">+5</button></span></div>`).join("");
+ const voices=japaneseVoices();
+ const voiceOptions=voices.map(voice=>`<option value="${escapeHTML(voice.name)}"${voice.name===selectedVoice?" selected":""}>${escapeHTML(voice.name)}</option>`).join("");
  return `<div class="admin-backdrop"><section class="admin-panel" role="dialog" aria-modal="true" aria-label="管理と復旧">
   <h1>管理・復旧</h1>
   <p class="admin-state">${escapeHTML(currentGame().name)}／${escapeHTML(state.phase)}／マイク ${micDenied?"要確認":recognizerBusy?"聞き取り中":"待機"}</p>
@@ -101,6 +106,14 @@ function adminMarkup(){
    <label>チーム数<select id="adminTeams">${Array.from({length:9},(_,i)=>i+2).map(count=>`<option value="${count}"${count===state.names.length?" selected":""}>${count}</option>`).join("")}</select></label>
    <label>スタッフの呼び名<input id="adminStaff" maxlength="14" value="${escapeHTML(state.staff)}"></label>
    <button type="submit">設定を保存</button>
+  </form>
+  <div class="voice-settings">
+   <label>読み上げる声<select id="adminVoice"><option value="">自動（おすすめ）</option>${voiceOptions}</select></label>
+   <button type="button" data-action="previewVoice">声を試す</button>
+  </div>
+  <form id="commandForm" class="command-form">
+   <label>音声が通らない時の文字入力<input id="adminCommand" maxlength="80" autocomplete="off" enterkeyhint="send" placeholder="例：説明終わったよ"></label>
+   <button type="submit">文字で実行</button>
   </form>
   <div class="admin-actions"><button data-action="resume">マイク再開</button><button data-action="repeat">もう一度読む</button><button data-action="nextQuestion">次のお題</button><button data-action="nextGame">次のゲーム</button></div>
   <div class="score-list">${scoreRows}</div>
@@ -110,9 +123,9 @@ function adminMarkup(){
 }
 
 function render(){
- root.className=`stage ${activated?"activated":"waiting"} ${speaking?"talking":recognizerBusy?"listening":"idle"}`;
+ root.className=`stage ${activated?"activated":"waiting"} ${speaking?"talking":recognizerBusy?"listening":working?"thinking":"idle"}`;
  root.innerHTML=`<div class="scene" aria-hidden="true"><div class="glow"></div><div class="voice-ring ring-one"></div><div class="voice-ring ring-two"></div></div>
-  <div class="avatar-frame"><img class="avatar-image" src="/coach-avatar.png" alt="サイ校ゲームの男性スポーツコーチ姿のアバター"></div>
+  <div class="avatar-frame"><div class="avatar-sprite"><img class="avatar-image avatar-idle" src="/coach-avatar.png" alt="サイ校ゲームの男性スポーツコーチ姿のアバター"><img class="avatar-image avatar-mouth" src="/coach-avatar-speaking.png" alt="" aria-hidden="true"></div></div>
   ${!activated?'<button class="start-surface" data-action="activate" aria-label="画面を一度タップして音声ゲームを開始"></button>':""}
   <p class="sr-only" aria-live="assertive">${speaking?"アバターが話しています":recognizerBusy?"スタッフの声を聞いています":"音声待機中"}</p>
   ${adminMarkup()}`;
@@ -136,9 +149,26 @@ function cancelSpeech(){
  speaking=false;
 }
 
-function chooseVoice(){
+function voiceScore(voice){
+ const name=String(voice?.name||"");
+ let score=String(voice?.lang||"").toLowerCase()==="ja-jp"?100:50;
+ if(/natural|enhanced|premium/i.test(name))score+=100;
+ if(/online/i.test(name))score+=45;
+ if(/keita|otoya|ichiro|daichi/i.test(name))score+=38;
+ if(/nanami|kyoko|haruka/i.test(name))score+=24;
+ if(/google/i.test(name))score+=18;
+ if(voice?.localService===false)score+=8;
+ return score;
+}
+
+function japaneseVoices(){
  const voices=window.speechSynthesis?.getVoices?.()||[];
- return voices.find(voice=>voice.lang==="ja-JP"&&/google|microsoft|kyoko|haruka|ichiro|nanami/i.test(voice.name))||voices.find(voice=>String(voice.lang).startsWith("ja"))||null;
+ return voices.filter(voice=>String(voice.lang||"").toLowerCase().startsWith("ja")).sort((a,b)=>voiceScore(b)-voiceScore(a)||String(a.name).localeCompare(String(b.name),"ja"));
+}
+
+function chooseVoice(){
+ const voices=japaneseVoices();
+ return voices.find(voice=>voice.name===selectedVoice)||voices[0]||null;
 }
 
 function speechChunks(text){
@@ -146,10 +176,19 @@ function speechChunks(text){
  if(!clean)return [];
  const sentences=clean.match(/[^。！？!?]+[。！？!?]?/g)||[clean];
  const chunks=[];
+ let current="";
  for(const sentence of sentences){
-  if(sentence.length<=105){chunks.push(sentence.trim());continue}
-  for(let i=0;i<sentence.length;i+=95)chunks.push(sentence.slice(i,i+95).trim());
+  const part=sentence.trim();
+  if(!part)continue;
+  if(part.length>145){
+   if(current){chunks.push(current);current=""}
+   for(let i=0;i<part.length;i+=120)chunks.push(part.slice(i,i+120).trim());
+   continue;
+  }
+  if(current&&current.length+part.length>145){chunks.push(current);current=part}
+  else current+=part;
  }
+ if(current)chunks.push(current);
  return chunks.filter(Boolean);
 }
 
@@ -174,7 +213,7 @@ function say(text,{listenAfter=true}={}){
    if(index>=chunks.length){finish();return}
    if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){finish();return}
    const utterance=new window.SpeechSynthesisUtterance(chunks[index]);
-   utterance.lang="ja-JP";utterance.rate=0.92;utterance.pitch=1.02;utterance.volume=1;
+   utterance.lang="ja-JP";utterance.rate=0.96;utterance.pitch=0.92;utterance.volume=1;
    const voice=chooseVoice();if(voice)utterance.voice=voice;
    let ended=false;
    const next=()=>{if(ended||job!==speechJob)return;ended=true;clearTimeout(speechTimer);play(index+1)};
@@ -449,10 +488,27 @@ function saveSettings(){
  const oldScores=state.scores.slice();state.names=Array.from({length:count},(_,index)=>`チーム${index+1}`);state.scores=state.names.map((_,index)=>oldScores[index]||0);state.staff=staff;persist();render();
 }
 
+function saveVoiceChoice(){
+ selectedVoice=String(document.getElementById("adminVoice")?.value||"");
+ try{localStorage.setItem(voiceKey,selectedVoice)}catch{}
+}
+
+async function runTypedCommand(){
+ const command=String(document.getElementById("adminCommand")?.value||"").trim();
+ if(!command)return;
+ if(!state.started){state.started=true;state.phase="team_setup";persist()}
+ activated=true;showAdmin=false;listeningWanted=!micDenied;render();
+ await interpret(command);
+}
+
 function handleAction(button){
  const action=button.dataset.action;
  if(action==="activate"){void activate();return}
  if(action==="closeAdmin"){closeAdmin();return}
+ if(action==="previewVoice"){
+  saveVoiceChoice();
+  void say("こんにちは。サイ校ゲームを、いっしょに楽しみましょう。",{listenAfter:false});return;
+ }
  if(action==="resume"){micDenied=false;activated=true;showAdmin=false;listeningWanted=true;render();queueListen(250);return}
  if(action==="repeat"){showAdmin=false;listeningWanted=true;render();void say(lastSpeech||"音声ゲームを再開します。");return}
  if(action==="nextQuestion"){showAdmin=false;listeningWanted=true;render();void showQuestion();return}
@@ -469,7 +525,11 @@ function handleAction(button){
 }
 
 document.addEventListener("click",event=>{const button=event.target?.closest?.("[data-action]");if(button)handleAction(button)});
-document.addEventListener("submit",event=>{if(event.target?.id==="settingsForm"){event.preventDefault();saveSettings()}});
+document.addEventListener("submit",event=>{
+ if(event.target?.id==="settingsForm"){event.preventDefault();saveSettings();return}
+ if(event.target?.id==="commandForm"){event.preventDefault();void runTypedCommand()}
+});
+document.addEventListener("change",event=>{if(event.target?.id==="adminVoice")saveVoiceChoice()});
 document.addEventListener("pointerdown",event=>{
  if(event.target?.closest?.(".admin-panel"))return;
  holdStart={x:event.clientX,y:event.clientY};clearTimeout(holdTimer);
@@ -483,6 +543,7 @@ for(const type of ["pointerup","pointercancel","pointerleave"])document.addEvent
 document.addEventListener("keydown",event=>{if(event.shiftKey&&event.key==="Escape"){event.preventDefault();showAdmin?closeAdmin():openAdmin()}});
 document.addEventListener("visibilitychange",()=>{if(document.hidden){stopListening()}else if(activated&&!showAdmin){listeningWanted=true;queueListen(900)}});
 window.addEventListener?.("beforeunload",()=>{stopListening();cancelSpeech()});
+if(window.speechSynthesis)window.speechSynthesis.onvoiceschanged=()=>{if(showAdmin&&!speaking)render()};
 
 render();
 })();

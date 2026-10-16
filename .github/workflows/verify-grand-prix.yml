@@ -10,6 +10,7 @@ on:
       - 'avatar-stage.js'
       - 'avatar-stage.css'
       - 'coach-avatar.png'
+      - 'coach-avatar-speaking.png'
       - 'manifest.webmanifest'
       - 'host-cue-sheet.html'
       - 'game-v3.css'

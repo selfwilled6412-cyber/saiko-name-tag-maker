@@ -7,15 +7,20 @@ button{cursor:pointer}
 .scene::before{content:"";position:absolute;inset:auto -12% -18%;height:47%;border-radius:50% 50% 0 0;background:linear-gradient(180deg,#9fd7b7 0%,#6fbd93 70%,#54a87d 100%);box-shadow:inset 0 18px 35px #ffffff50}
 .scene::after{content:"";position:absolute;left:50%;bottom:-19%;width:min(85vw,920px);height:56%;transform:translateX(-50%);border-radius:50% 50% 0 0;background:linear-gradient(180deg,#d6a56a,#bb7b4d 66%,#9f603f);opacity:.88;box-shadow:0 -8px 28px #93593738}
 .glow{position:absolute;left:50%;top:47%;width:min(84vmin,740px);aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,#fff 0 27%,#ffffffa8 45%,#74c4f033 62%,transparent 70%);filter:blur(1px)}
-.avatar-frame{position:relative;z-index:2;width:min(72vw,660px);height:min(94dvh,980px);display:flex;align-items:flex-end;justify-content:center;transform-origin:50% 100%;animation:breathe 4.8s ease-in-out infinite}
+.avatar-frame{position:relative;z-index:2;width:min(72vw,660px);height:min(94dvh,980px);display:flex;align-items:flex-end;justify-content:center;transform-origin:50% 100%;animation:breathe 4.8s ease-in-out infinite;will-change:transform}
+.avatar-sprite{position:relative;width:100%;height:100%}
 .avatar-image{display:block;width:100%;height:100%;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 28px 18px #1536523d);pointer-events:none;-webkit-user-drag:none}
+.avatar-mouth{position:absolute;inset:0;opacity:0;clip-path:ellipse(4.6% 2.2% at 50% 13.5%);filter:none;will-change:opacity}
 .voice-ring{position:absolute;left:50%;top:43%;width:min(64vmin,570px);aspect-ratio:1;border:5px solid #1879ba2b;border-radius:50%;transform:translate(-50%,-50%) scale(.92);opacity:0}
 .ring-two{width:min(76vmin,690px);border-width:3px}
 .listening .voice-ring{animation:listen-ring 2s ease-out infinite}
 .listening .ring-two{animation-delay:.72s}
 .talking .voice-ring{border-color:#ff993f47;animation:talk-ring .85s ease-out infinite}
 .talking .ring-two{animation-delay:.33s}
-.talking .avatar-frame{animation:talk-bob .58s ease-in-out infinite}
+.talking .avatar-frame{animation:talk-bob 1.05s ease-in-out infinite}
+.talking .avatar-mouth{animation:mouth-talk .3s steps(1,end) infinite}
+.listening .avatar-frame{animation:listen-lean 2.8s ease-in-out infinite}
+.thinking .avatar-frame{animation:thinking-nod 1.8s ease-in-out infinite}
 .start-surface{position:absolute;inset:0;z-index:8;width:100%;height:100%;border:0;padding:0;background:transparent;color:transparent;-webkit-tap-highlight-color:transparent}
 .waiting .avatar-frame::after{content:"";position:absolute;left:50%;top:44%;width:64%;aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%);border:4px solid #fff9;box-shadow:0 0 0 8px #258ec11a;animation:ready-pulse 2.2s ease-in-out infinite;pointer-events:none}
 .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
@@ -26,6 +31,9 @@ button{cursor:pointer}
 .settings-form{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;margin-bottom:16px}
 .settings-form label{display:flex;flex-direction:column;gap:5px;font-weight:800;font-size:13px}
 .settings-form input,.settings-form select{width:100%;min-height:44px;border:1px solid #b8cedd;border-radius:10px;background:#fff;color:#17324a;padding:8px 10px}
+.voice-settings,.command-form{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;margin:12px 0;padding:12px;border-radius:15px;background:#edf6fb}
+.voice-settings label,.command-form label{display:flex;flex-direction:column;gap:5px;font-weight:800;font-size:13px}
+.voice-settings select,.command-form input{width:100%;min-height:44px;border:1px solid #b8cedd;border-radius:10px;background:#fff;color:#17324a;padding:8px 10px}
 .admin-panel button{min-height:43px;border:1px solid #8ab3ca;border-radius:11px;background:#e4f4fc;color:#174866;padding:8px 13px;font-weight:800;box-shadow:0 2px 0 #aac7d6}
 .admin-panel button:active{transform:translateY(1px);box-shadow:none}
 .admin-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
@@ -36,10 +44,13 @@ button{cursor:pointer}
 .score-row span:last-child{display:flex;gap:5px}
 .score-row button{min-width:45px;min-height:36px;padding:5px 8px}
 @keyframes breathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-7px) scale(1.006)}}
-@keyframes talk-bob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-9px) scale(1.012)}}
+@keyframes talk-bob{0%,100%{transform:translateY(0) rotate(0) scale(1)}35%{transform:translateY(-7px) rotate(-.35deg) scale(1.008)}70%{transform:translateY(-2px) rotate(.18deg) scale(1.004)}}
+@keyframes mouth-talk{0%,38%,100%{opacity:0}39%,76%{opacity:1}}
+@keyframes listen-lean{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-5px) rotate(-.55deg)}}
+@keyframes thinking-nod{0%,100%{transform:translateY(0) rotate(0)}45%{transform:translateY(3px) rotate(.45deg)}65%{transform:translateY(-2px) rotate(-.2deg)}}
 @keyframes ready-pulse{0%,100%{opacity:.2;transform:translate(-50%,-50%) scale(.9)}50%{opacity:.75;transform:translate(-50%,-50%) scale(1.03)}}
 @keyframes listen-ring{0%{opacity:.5;transform:translate(-50%,-50%) scale(.72)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.18)}}
 @keyframes talk-ring{0%{opacity:.65;transform:translate(-50%,-50%) scale(.82)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.08)}}
-@media(max-width:700px){.avatar-frame{width:min(96vw,610px);height:min(91dvh,880px)}.settings-form{grid-template-columns:1fr}.admin-panel{padding:17px}.score-row{align-items:flex-start;flex-direction:column}.admin-panel .close{margin-left:0}}
+@media(max-width:700px){.avatar-frame{width:min(96vw,610px);height:min(91dvh,880px)}.settings-form,.voice-settings,.command-form{grid-template-columns:1fr}.admin-panel{padding:17px}.score-row{align-items:flex-start;flex-direction:column}.admin-panel .close{margin-left:0}}
 @media(max-height:580px) and (orientation:landscape){.avatar-frame{width:min(58vw,520px);height:96dvh}.scene::before{height:38%}.scene::after{width:63vw}.admin-panel{max-height:94dvh}}
-@media(prefers-reduced-motion:reduce){.avatar-frame,.voice-ring,.waiting .avatar-frame::after{animation:none!important}}
+@media(prefers-reduced-motion:reduce){.avatar-frame,.avatar-mouth,.voice-ring,.waiting .avatar-frame::after{animation:none!important}.talking .avatar-mouth{opacity:1}}
