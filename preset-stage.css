@@ -1,0 +1,16 @@
+.preset-panel{width:min(96vw,760px)}
+.preset-panel h2{margin:20px 0 8px;font-size:17px}
+.preset-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;align-items:end}
+.preset-grid label,.jump-row label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:800}
+.preset-grid select,.jump-row select{width:100%;min-height:44px;border:1px solid #b8cedd;border-radius:10px;background:#fff;color:#17324a;padding:8px 10px}
+.preset-grid button{min-height:44px}
+.progress-card{margin:12px 0;padding:11px 13px;border-radius:14px;background:#fff7dc;border:1px solid #ead494;color:#5b4811;font-size:13px;line-height:1.6}
+.jump-row{display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin:12px 0}
+.jump-row label{min-width:110px}
+.secret-card{margin:12px 0;padding:14px;border-radius:15px;background:#1e3345;color:#fff}
+.secret-card strong{display:block;margin-bottom:7px;color:#ffd975}
+.secret-card p{margin:0;line-height:1.75;font-weight:800}
+.secret-warning{margin:6px 0 0;color:#d9e8f2;font-size:12px}
+.preset-help{margin:14px 0;padding:12px;border-radius:15px;background:#edf6fb;color:#405e70;font-size:12px;line-height:1.7}
+.preset-help code{font-family:inherit;font-weight:900;color:#173f59;background:#fff;padding:2px 5px;border-radius:5px}
+@media(max-width:700px){.preset-grid{grid-template-columns:1fr 1fr}.preset-grid label:first-child{grid-column:1/-1}.preset-grid button{grid-column:1/-1}.preset-panel h2{font-size:16px}}
