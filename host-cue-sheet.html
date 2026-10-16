@@ -2,24 +2,108 @@
 <html lang="ja">
 <head>
  <meta charset="utf-8">
- <meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
  <meta name="robots" content="noindex,nofollow">
- <title>スタッフ用カンペ｜サイ校ゲーム</title>
+ <meta name="theme-color" content="#e7f5ff">
+ <title>進行役スタッフ用カンペ｜サイ校ゲーム</title>
  <style>
-  body{font-family:system-ui,"Noto Sans JP",sans-serif;background:#eef7fc;color:#17324a;margin:0;padding:20px}main{max-width:1040px;margin:auto;background:#fff;border:2px solid #cfe2ed;border-radius:20px;padding:24px}header{background:#dff2ff;padding:13px 20px;border-radius:15px}h1{margin:0;font-size:25px}header p{margin:3px 0;font-size:12px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}section{border:1px solid #d7e6ee;padding:10px 13px;border-radius:12px;break-inside:avoid}h2{font-size:16px;margin:2px 0 8px;color:#256b91}p,li{font-size:13px;line-height:1.7;margin:4px 0}ol{padding-left:19px;margin:0}.sample{font-weight:800;color:#225f83}.warn{background:#fff5d6;padding:10px;border-radius:11px;margin-top:14px;font-size:12px}.btn{display:inline-block;margin:0 0 9px;border:0;background:#256b91;color:#fff;padding:8px 14px;border-radius:9px;font-size:13px;font-weight:800;cursor:pointer}footer{font-size:11px;color:#6a8190;margin-top:15px}@page{size:A4 landscape;margin:9mm}@media print{body{padding:0}main{padding:0;border:none}section{padding:8px}h1{font-size:20px}h2{font-size:13px}p,li{font-size:10px}.grid{gap:7px}header{padding:8px}.btn{display:none}.warn{font-size:10px}}@media(max-width:700px){.grid{grid-template-columns:1fr}main{padding:12px}}
+  *{box-sizing:border-box}html{background:#dcecf5}body{font-family:system-ui,"Yu Gothic UI","Hiragino Sans",Meiryo,sans-serif;color:#17324a;margin:0;padding:18px}button,a{font:inherit}.toolbar{max-width:1120px;margin:0 auto 10px;display:flex;gap:8px;flex-wrap:wrap}.btn{display:inline-flex;align-items:center;justify-content:center;min-height:42px;border:0;border-radius:11px;padding:9px 15px;background:#226a91;color:#fff;text-decoration:none;font-weight:800;cursor:pointer}.btn.secondary{background:#fff;color:#235d7c;border:1px solid #9fc7da}main{max-width:1120px;margin:auto;background:#fff;border:1px solid #c3dce8;border-radius:22px;padding:22px;box-shadow:0 16px 50px #244c6421}header{background:linear-gradient(135deg,#dff3ff,#effaff);padding:16px 19px;border-radius:16px;border-left:6px solid #2a86b6}h1{margin:0;font-size:clamp(23px,3vw,32px)}header p{margin:6px 0 0;line-height:1.55}.status{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.pill{border-radius:999px;padding:5px 10px;background:#fff;color:#315e76;font-size:12px;font-weight:800}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}.column{display:grid;gap:12px;align-content:start}.card{border:1px solid #d3e4ec;padding:13px 15px;border-radius:14px;break-inside:avoid;background:#fff}.card.accent{background:#f1f9fd}.card.emergency{background:#fff8e4;border-color:#e9cd7d}h2{font-size:17px;margin:0 0 9px;color:#246b91}h3{font-size:14px;margin:11px 0 4px}p,li{font-size:13px;line-height:1.65;margin:5px 0}ol,ul{padding-left:20px;margin:0}.phrase{display:block;margin:6px 0;padding:7px 9px;border-radius:9px;background:#e5f4fb;color:#164f70;font-size:14px;font-weight:900}.mini{color:#597484;font-size:11px}.signal{display:grid;grid-template-columns:auto 1fr;gap:6px 9px;align-items:center}.dot{width:13px;height:13px;border-radius:50%;box-shadow:0 0 0 4px #fff}.dot.orange{background:#f68b32}.dot.blue{background:#2186ba}.games{display:grid;grid-template-columns:1fr 1fr;gap:5px 10px}.games p{margin:0}.warn{background:#fff0e7;border:1px solid #efc4a8;padding:11px 13px;border-radius:12px;margin-top:13px;font-size:12px}footer{font-size:11px;color:#617b89;margin-top:13px;overflow-wrap:anywhere}@page{size:A4 landscape;margin:7mm}@media print{html,body{background:#fff}body{padding:0}.toolbar{display:none}main{max-width:none;padding:0;border:0;box-shadow:none}header{padding:9px 13px}h1{font-size:20px}.grid{gap:7px;margin-top:7px}.column{gap:7px}.card{padding:7px 9px}h2{font-size:13px;margin-bottom:4px}h3{font-size:11px;margin:5px 0 2px}p,li,.phrase{font-size:9px;line-height:1.38}.phrase{padding:3px 6px;margin:3px 0}.mini,footer,.warn{font-size:8px}.warn{padding:6px;margin-top:7px}.status{margin-top:5px}.pill{font-size:8px;padding:3px 6px}}@media(max-width:820px){body{padding:10px}.grid{grid-template-columns:1fr}main{padding:13px;border-radius:17px}.toolbar{position:sticky;top:0;z-index:5;padding:4px 0;background:#dcecf5e8;backdrop-filter:blur(7px)}.btn{flex:1}.games{grid-template-columns:1fr}}
  </style>
 </head>
 <body>
- <button class="btn" onclick="print()">A4横で印刷する</button>
+ <nav class="toolbar" aria-label="カンペの操作">
+  <a class="btn" href="/" target="_blank" rel="noopener">ゲームを開く</a>
+  <button class="btn secondary" type="button" onclick="print()">A4横で印刷</button>
+ </nav>
  <main>
-  <header><h1>サイ校ゲーム｜スタッフ用カンペ</h1><p>通常画面はアバターだけ。最初の一度を除き、声だけで進行します（2〜10チーム）。</p></header>
+  <header>
+   <h1>サイ校ゲーム｜進行役スタッフ用カンペ</h1>
+   <p>アバターが司会します。スタッフは、実演・会場フォロー・短い音声指示だけ担当します。</p>
+   <div class="status"><span class="pill">2〜10チーム</span><span class="pill">通常画面はアバターだけ</span><span class="pill">困ったら画面を長押し</span></div>
+  </header>
+
   <div class="grid">
-   <div><section><h2>1. 開始</h2><ol><li>本番URLを開き、アバターを一度タップ。</li><li>マイクを許可。</li><li>「3チーム」のようにチーム数を声で回答。</li><li>アバターの説明後、スタッフが実演。</li><li>「説明終わったよ」と声をかける。</li></ol></section><section><h2>2. 次へ進む</h2><p class="sample">「次のお題」</p><p>同じゲームの新しいお題を出します。</p><p class="sample">「次のゲーム」</p><p>次の種目を例題から始めます。</p><p class="sample">「もっと簡単に」「もう一度」</p><p>難易度を変える、または案内を読み直します。</p></section></div>
-   <div><section><h2>3. 得点</h2><p>「チーム1に5点」と伝えます。アバターが確認するので、正しければ「はい」、違えば「違う」と答えます。</p><p>「順位を教えて」で現在の得点を読み上げます。</p><p>「今の得点を取り消して」で直前の加点を戻せます。</p></section><section><h2>4. もしも裁判</h2><p>検察と弁護が言い分を話します。「新しい証拠」と言えば、アバターが追加の事実を発表します。</p><p>判定役はスタッフが担当します。</p></section></div>
-   <div><section><h2>5. 会話例</h2><p><strong>アバター：</strong>第1ゲームは、ぴったりシンクロです。まずは例題です。吉村さん、実演してください。</p><p><strong>スタッフ：</strong>「説明終わったよ」</p><p><strong>アバター：</strong>ありがとう。それでは、みなさんスタートです。</p><p><strong>スタッフ：</strong>「次のゲーム」</p></section><section><h2>6. 復旧</h2><p>画面を1.4秒長押しすると管理・復旧画面が開きます。マイク再開、読み直し、次のお題、次のゲーム、得点修正、チーム数変更ができます。</p><p>パソコンではShift+Escapeでも開閉できます。</p></section></div>
+   <div class="column">
+    <section class="card accent">
+     <h2>1｜始める前</h2>
+     <ol>
+      <li>できれば、このカンペは別のスマホか印刷で見る。</li>
+      <li>ゲーム端末の音量を確認し、スタッフの近くに置く。</li>
+      <li>ゲームを開き、アバターを一度タップ。</li>
+      <li>マイクを「許可」。聞かれたら、チーム数を答える。</li>
+     </ol>
+     <span class="phrase">「3チームです」</span>
+     <p class="mini">同じ端末でカンペへ切り替えると、音声認識が止まる場合があります。</p>
+    </section>
+
+    <section class="card">
+     <h2>2｜基本の進め方</h2>
+     <ol>
+      <li>アバターがルールと例題を話す。</li>
+      <li>名前を呼ばれたスタッフが実演する。</li>
+      <li>参加者の準備を確認して、短く伝える。</li>
+     </ol>
+     <span class="phrase">「説明終わったよ」</span>
+     <p>本番のお題が発表されます。終わったら次へ進めます。</p>
+     <span class="phrase">「次のお題」</span>
+     <span class="phrase">「次のゲーム」</span>
+    </section>
+
+    <section class="card">
+     <h2>話すタイミング</h2>
+     <div class="signal"><span class="dot orange"></span><p><strong>オレンジの輪：</strong>アバターが話しています。待つ。</p><span class="dot blue"></span><p><strong>青い輪：</strong>聞き取り中。端末に向かって短く話す。</p></div>
+     <p class="mini">一度に複数の指示を言わず、一つずつ伝えると認識しやすくなります。</p>
+    </section>
+   </div>
+
+   <div class="column">
+    <section class="card">
+     <h2>3｜よく使う言葉</h2>
+     <span class="phrase">「もう一度」</span><p>直前の案内を読み直す。</p>
+     <span class="phrase">「もっと簡単に」</span><p>やさしいお題に変える。</p>
+     <span class="phrase">「もっと難しく」</span><p>難しいお題に変える。</p>
+     <span class="phrase">「別のお題」</span><p>違うお題を出す。</p>
+     <span class="phrase">「新しい証拠」</span><p>もしも裁判の追加情報を出す。</p>
+    </section>
+
+    <section class="card">
+     <h2>4｜得点</h2>
+     <span class="phrase">「チーム1に5点」</span>
+     <p>アバターが確認します。正しければ<strong>「はい」</strong>、違えば<strong>「違う」</strong>。</p>
+     <span class="phrase">「順位を教えて」</span>
+     <span class="phrase">「今の得点を取り消して」</span>
+     <p class="mini">聞き間違えた得点に「はい」と答えないこと。管理画面から+1・+3・+5の手動加点もできます。</p>
+    </section>
+
+    <section class="card">
+     <h2>ゲーム一覧</h2>
+     <div class="games"><p>① ぴったりシンクロ</p><p>② おすすめプレゼン</p><p>③ ジェスチャー対決</p><p>④ もしも裁判</p><p>⑤ 記者会見チャレンジ</p><p>⑥ どっちを選ぶ？</p><p>⑦ ぴったりチャレンジ</p></div>
+    </section>
+   </div>
+
+   <div class="column">
+    <section class="card emergency">
+     <h2>5｜困った時の保険</h2>
+     <p><strong>画面の何もない所を約1.4秒長押し</strong>すると、「管理・復旧」が開きます。</p>
+     <h3>声が認識されない</h3><p>「マイク再開」を押す。それでもだめなら、文字入力へ。</p>
+     <h3>文字で進める</h3><p>「音声が通らない時の文字入力」に、音声と同じ言葉を入力して「文字で実行」。</p>
+     <h3>声が不自然・聞きづらい</h3><p>「読み上げる声」を変更し、「声を試す」で確認。</p>
+     <h3>進行を手動で動かす</h3><p>「もう一度読む」「次のお題」「次のゲーム」を使用。</p>
+     <h3>最初からやり直す</h3><p>「新しい大会」を押し、確認する。</p>
+    </section>
+
+    <section class="card">
+     <h2>6｜会話の見本</h2>
+     <p><strong>アバター：</strong>まずは例題です。吉村さん、実演してください。</p>
+     <p><strong>スタッフ：</strong>実演後に「説明終わったよ」</p>
+     <p><strong>アバター：</strong>ありがとう。それでは、みなさんスタートです。</p>
+     <p><strong>スタッフ：</strong>終了後に「次のお題」または「次のゲーム」</p>
+    </section>
+   </div>
   </div>
-  <div class="warn"><strong>大切：</strong>会場の騒音が大きい場合は端末をスタッフに近づけてください。個人情報は話さないでください。マイク認識はブラウザと通信環境に依存します。</div>
-  <footer>本番URL: https://saiko-world-grand-prix.pages.dev/</footer>
+
+  <div class="warn"><strong>本番のコツ：</strong>アバターが話している間はスタッフが話さず、青い輪を待つ。会場が騒がしい時は端末をスタッフへ近づける。個人情報は話さない。</div>
+  <footer>ゲーム：https://saiko-world-grand-prix.pages.dev/　｜　カンペ：https://saiko-world-grand-prix.pages.dev/host-cue-sheet.html</footer>
  </main>
 </body>
 </html>

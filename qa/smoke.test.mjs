@@ -5,6 +5,7 @@ import {readFileSync,existsSync} from "node:fs";
 const html=readFileSync(new URL("../index.html",import.meta.url),"utf8");
 const script=readFileSync(new URL("../avatar-stage.js",import.meta.url),"utf8");
 const css=readFileSync(new URL("../avatar-stage.css",import.meta.url),"utf8");
+const cue=readFileSync(new URL("../host-cue-sheet.html",import.meta.url),"utf8");
 
 test("本番URLは完全音声アバター画面を読み込む",()=>{
  assert.match(html,/avatar-stage\.js\?v=voice-only/);
@@ -32,4 +33,13 @@ test("通常画面のCSSは文字UIを持たず、管理画面だけ別レイヤ
  assert.match(css,/\.start-surface/);
  assert.match(css,/\.admin-backdrop/);
  assert.match(css,/\.sr-only/);
+});
+
+test("進行役カンペに音声進行と文字入力の復旧手順がある",()=>{
+ assert.match(cue,/説明終わったよ/);
+ assert.match(cue,/次のお題/);
+ assert.match(cue,/チーム1に5点/);
+ assert.match(cue,/1\.4秒長押し/);
+ assert.match(cue,/文字で実行/);
+ assert.match(cue,/読み上げる声/);
 });
