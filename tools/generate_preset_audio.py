@@ -98,6 +98,7 @@ def collect_phrases(games: list[dict]) -> list[str]:
     for number in range(1, 11):
         phrases.add(f"今は、第{number}問です。")
         phrases.add(f"おかえりなさい。前回の続きです。今は第{number}問です。続けるときは、次のお題お願いします、と言ってください。")
+        phrases.add(f"ゲームはすでに進行中です。今は第{number}問です。もう一度聞くときは、もう一度。次に進むときは、次のお題お願いします、と言ってください。")
 
     for game in games:
         game_id = game["id"]

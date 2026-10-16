@@ -84,16 +84,17 @@ test("確認版はAI生成APIを呼ばず、通常画面はアバターだけ",(
  assert.match(html,/preset-audio-manifest\.js/);
  assert.match(html,/preset-stage\.js/);
  assert.match(stageScript,/window\.SAIKO_PRESET_AUDIO/);
+ assert.match(stageScript,/recognitionWatchdog/);
  assert.match(css,/\.secret-card/);
  assert.match(markup.innerHTML,/coach-avatar\.png/);
  assert.doesNotMatch(markup.innerHTML,/管理・復旧/);
 });
 
-test("自然音声400本をクラウド配信用に同梱し、全ファイルが存在する",()=>{
+test("自然音声410本をクラウド配信用に同梱し、全ファイルが存在する",()=>{
  const audioWindow={};
  vm.runInNewContext(audioScript,{window:audioWindow},{timeout:2500});
  const manifest=audioWindow.SAIKO_PRESET_AUDIO;
- assert.equal(Object.keys(manifest).length,400);
+ assert.equal(Object.keys(manifest).length,410);
  assert.match(manifest["タップを確認しました。マイクを準備します。"],/\.mp3$/);
  for(const path of Object.values(manifest)){
   const file=new URL(".."+path,import.meta.url);
@@ -112,6 +113,10 @@ test("ゲーム、パターン、1問目、次のお題を音声で進める",as
  await voice("一問目スタート");
  assert.equal(snapshot().questionIndex,0);
  assert.match(utterances.join(""),/おにぎり/);
+ const repeatedAt=utterances.length;
+ await voice("一問目スタート");
+ assert.equal(snapshot().questionIndex,0);
+ assert.match(utterances.slice(repeatedAt).join(""),/すでに進行中/);
  await voice("次のお題お願いします");
  assert.equal(snapshot().questionIndex,1);
  assert.match(utterances.join(""),/思いきり笑える映画/);

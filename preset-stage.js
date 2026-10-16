@@ -34,6 +34,8 @@ let micDenied=false;
 let recognition=null;
 let recognitionEpoch=0;
 let recognitionRetry=0;
+let recognitionStartedAt=0;
+let recognitionWatchdog=0;
 let listenTimer=0;
 let speechTimer=0;
 let speechJob=0;
@@ -91,7 +93,7 @@ function render(){
 function clearListenTimer(){clearTimeout(listenTimer);listenTimer=0}
 function stopListening(){
  clearListenTimer();recognitionEpoch++;
- const old=recognition;recognition=null;recognizerBusy=false;
+ const old=recognition;recognition=null;recognizerBusy=false;recognitionStartedAt=0;
  if(old){try{old.onend=null;old.onerror=null;old.onresult=null;old.abort?.()}catch{try{old.stop?.()}catch{}}}
 }
 function cancelSpeech(){
@@ -131,7 +133,12 @@ function say(text,{listenAfter=true}={}){
  });
 }
 
-function queueListen(delay=700){clearListenTimer();if(!activated||!listeningWanted||speaking||showAdmin||micDenied)return;listenTimer=setTimeout(()=>{if(!activated||!listeningWanted||speaking||showAdmin||micDenied||recognizerBusy)return;startRecognition()},delay)}
+function queueListen(delay=700){clearListenTimer();if(!activated||!listeningWanted||speaking||showAdmin||micDenied)return;listenTimer=setTimeout(()=>{listenTimer=0;if(!activated||!listeningWanted||speaking||showAdmin||micDenied||recognizerBusy)return;startRecognition()},delay)}
+function ensureListening(){
+ if(!activated||!listeningWanted||speaking||preparingMic||showAdmin||micDenied)return;
+ if(recognition&&recognitionStartedAt&&Date.now()-recognitionStartedAt>15000){stopListening();queueListen(250);return}
+ if(!recognizerBusy&&!recognition&&!listenTimer)queueListen(250);
+}
 function bestTranscript(event){
  const results=event?.results;if(!results)return "";
  for(let index=results.length-1;index>=0;index--){if(results[index]?.isFinal===false)continue;const choices=Array.from(results[index]||[]).map(item=>({text:String(item?.transcript||"").trim(),confidence:Number(item?.confidence)||0})).filter(item=>item.text).sort((a,b)=>b.confidence-a.confidence);if(choices[0]?.text)return choices[0].text}
@@ -143,12 +150,12 @@ function startRecognition(){
  stopListening();const epoch=recognitionEpoch;
  try{
   const recognizer=new SpeechRecognition();recognition=recognizer;recognizer.lang="ja-JP";recognizer.continuous=false;recognizer.interimResults=false;recognizer.maxAlternatives=3;
-  recognizer.onstart=()=>{if(epoch!==recognitionEpoch)return;recognizerBusy=true;recognitionRetry=0;render()};
-  recognizer.onresult=event=>{if(epoch!==recognitionEpoch)return;const words=bestTranscript(event);recognizerBusy=false;recognition=null;if(words){lastHeard=words;render();void interpret(words)}else queueListen(650)};
-  recognizer.onerror=event=>{if(epoch!==recognitionEpoch)return;const code=String(event?.error||"");recognizerBusy=false;recognition=null;render();if(["not-allowed","service-not-allowed","audio-capture"].includes(code)){micDenied=true;listeningWanted=false;void say("マイクを使えないみたいです。画面を長押しして、文字入力またはマイク再開を使ってください。",{listenAfter:false});return}recognitionRetry=Math.min(recognitionRetry+1,5);queueListen(code==="network"?Math.min(8000,800*Math.pow(2,recognitionRetry)):700)};
-  recognizer.onend=()=>{if(epoch!==recognitionEpoch)return;recognizerBusy=false;recognition=null;render();if(!speaking)queueListen(700)};
-  recognizer.start();
- }catch{recognizerBusy=false;recognition=null;recognitionRetry=Math.min(recognitionRetry+1,5);render();queueListen(Math.min(5000,500*recognitionRetry))}
+  recognizer.onstart=()=>{if(epoch!==recognitionEpoch)return;recognizerBusy=true;recognitionStartedAt=Date.now();recognitionRetry=0;render()};
+  recognizer.onresult=event=>{if(epoch!==recognitionEpoch)return;const words=bestTranscript(event);recognizerBusy=false;recognition=null;recognitionStartedAt=0;if(words){lastHeard=words;render();void interpret(words)}else queueListen(650)};
+  recognizer.onerror=event=>{if(epoch!==recognitionEpoch)return;const code=String(event?.error||"");recognizerBusy=false;recognition=null;recognitionStartedAt=0;render();if(["not-allowed","service-not-allowed","audio-capture"].includes(code)){micDenied=true;listeningWanted=false;void say("マイクを使えないみたいです。画面を長押しして、文字入力またはマイク再開を使ってください。",{listenAfter:false});return}recognitionRetry=Math.min(recognitionRetry+1,5);queueListen(code==="network"?Math.min(8000,800*Math.pow(2,recognitionRetry)):700)};
+  recognizer.onend=()=>{if(epoch!==recognitionEpoch)return;recognizerBusy=false;recognition=null;recognitionStartedAt=0;render();if(!speaking)queueListen(700)};
+  recognitionStartedAt=Date.now();recognizer.start();
+ }catch{recognizerBusy=false;recognition=null;recognitionStartedAt=0;recognitionRetry=Math.min(recognitionRetry+1,5);render();queueListen(Math.min(5000,500*recognitionRetry))}
 }
 
 function parseJapaneseNumber(value){
@@ -216,11 +223,11 @@ async function interpret(raw){
  if(isMatch(message,["このゲームを終了","ゲーム終了","ゲームを終わる"])){await endGame();return true}
  if(isMatch(message,["最初からやり直し","説明からやり直し"])){const game=currentGame();if(game)await startGame(game,state.pattern,state.mode);else await say("現在、選ばれているゲームはありません。");return true}
  if(isMatch(message,["前のお題","前の問題","一つ戻って"])){if(state.questionIndex>0)await announceQuestion(state.questionIndex-1);else await say("これより前のお題はありません。");return true}
+ if(isMatch(message,["一問目スタート","1問目スタート","一問目開始","最初のお題"])){if(state.questionIndex>=0)await say(`ゲームはすでに進行中です。今は第${state.questionIndex+1}問です。もう一度聞くときは、もう一度。次に進むときは、次のお題お願いします、と言ってください。`);else await announceQuestion(0);return true}
  const jump=message.match(/(10|[1-9]|[一二三四五六七八九十])問目(?:から)?(?:スタート|開始|再開)/);if(jump){const number=parseJapaneseNumber(jump[1]);if(number>=1&&number<=10)await announceQuestion(number-1);return true}
  if(isMatch(message,["新しい証拠","新証拠","証拠をお願いします","証拠お願い"])){await showEvidence();return true}
  if(state.gameId==="mime"&&isMatch(message,["お題をお願いします","お題お願い","秘密のお題"])){await revealMimeByVoice();return true}
  if(state.gameId==="mime"&&isMatch(message,["ゲームスタート","ジェスチャースタート","回答スタート"])){await startMimePlay();return true}
- if(isMatch(message,["一問目スタート","1問目スタート","一問目開始","最初のお題"])){await announceQuestion(0);return true}
  if(isMatch(message,["次のお題お願いします","次のお題","次の問題","次お願いします"])){if(!currentGame()){await say("先に、ゲーム名とパターンを指定してスタートしてください。");return true}if(state.questionIndex<0){await say("最初は、一問目スタート、と言ってください。");return true}if(state.questionIndex>=9)await finishGame();else await announceQuestion(state.questionIndex+1);return true}
  if(isMatch(message,["使い方","何て言えば","助けて","ヘルプ"])){await say(currentGame()?`現在は、${currentGame().name}、パターン${state.pattern}です。一問目スタート、次のお題お願いします、もう一度、前のお題、今は何問目、このゲームを終了、が使えます。`:"ゲーム名、パターン1、スタート、のように言ってください。");return true}
  queueListen(500);return false;
@@ -276,7 +283,8 @@ document.addEventListener("pointermove",event=>{if(!holdStart)return;if(Math.abs
 for(const type of ["pointerup","pointercancel","pointerleave"])document.addEventListener(type,()=>{clearTimeout(holdTimer);holdTimer=0;holdStart=null});
 document.addEventListener("keydown",event=>{if(event.shiftKey&&event.key==="Escape"){event.preventDefault();showAdmin?closeAdmin():openAdmin()}});
 document.addEventListener("visibilitychange",()=>{if(document.hidden)stopListening();else if(activated&&!showAdmin){listeningWanted=true;queueListen(900)}});
-window.addEventListener?.("beforeunload",()=>{stopListening();cancelSpeech()});
+recognitionWatchdog=setInterval(ensureListening,4000);
+window.addEventListener?.("beforeunload",()=>{clearInterval(recognitionWatchdog);stopListening();cancelSpeech()});
 window.__SAIKO_PRESET_TEST__={state:()=>state,parseStartCommand,interpret,announceQuestion,startGame};
 render();
 })();
