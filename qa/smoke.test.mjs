@@ -38,20 +38,25 @@ test("通常画面のCSSは文字UIを持たず、管理画面だけ別レイヤ
 });
 
 test("進行役カンペに音声進行と文字入力の復旧手順がある",()=>{
- assert.match(cue,/説明終わったよ/);
- assert.match(cue,/次のお題/);
- assert.match(cue,/チーム1に5点/);
+ assert.match(cue,/ぴったりシンクロ、パターン1、スタート/);
+ assert.match(cue,/一問目スタート/);
+ assert.match(cue,/次のお題お願いします/);
+ assert.match(cue,/新しい証拠お願いします/);
+ assert.match(cue,/お題をお願いします/);
+ assert.match(cue,/ぴったりチャレンジ、個人戦、パターン1、スタート/);
  assert.match(cue,/1\.4秒長押し/);
  assert.match(cue,/文字で実行/);
- assert.match(cue,/読み上げる声/);
+ assert.doesNotMatch(cue,/チーム名を設定|順位を教えて|今の得点を取り消して/);
 });
 
 test("スタッフと利用者向け説明資料に役割、ゲーム、安全案内がある",()=>{
- assert.match(guide,/スタッフ・利用者向け説明資料/);
+ assert.match(guide,/利用者向け事前説明資料/);
  assert.match(guide,/それぞれの役割/);
  assert.match(guide,/7つのゲーム/);
  assert.match(guide,/利用者への説明例/);
  assert.match(guide,/見学・パス/);
  assert.match(guide,/個人情報/);
+ assert.match(guide,/操作はスタッフがする/);
+ assert.match(guide,/1人1分/);
  assert.match(cue,/game-guide\.html/);
 });
