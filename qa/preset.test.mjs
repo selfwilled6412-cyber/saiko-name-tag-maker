@@ -156,6 +156,9 @@ test("ジェスチャーのお題は回答者への案内後に秘密で開示",
  assert.match(utterances.join(""),/ゴリラ/);
  await voice("ゲームスタート");
  assert.equal(snapshot().phase,"live");
+ await voice("次のお題お願いします");
+ assert.equal(snapshot().questionIndex,1);
+ assert.equal(snapshot().phase,"mime_wait_secret");
 });
 
 test("長押しの管理画面に文字入力、手動進行、秘密表示がある",async()=>{

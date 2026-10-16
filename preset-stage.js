@@ -226,7 +226,7 @@ async function interpret(raw){
  if(isMatch(message,["一問目スタート","1問目スタート","一問目開始","最初のお題"])){if(state.questionIndex>=0)await say(`ゲームはすでに進行中です。今は第${state.questionIndex+1}問です。もう一度聞くときは、もう一度。次に進むときは、次のお題お願いします、と言ってください。`);else await announceQuestion(0);return true}
  const jump=message.match(/(10|[1-9]|[一二三四五六七八九十])問目(?:から)?(?:スタート|開始|再開)/);if(jump){const number=parseJapaneseNumber(jump[1]);if(number>=1&&number<=10)await announceQuestion(number-1);return true}
  if(isMatch(message,["新しい証拠","新証拠","証拠をお願いします","証拠お願い"])){await showEvidence();return true}
- if(state.gameId==="mime"&&isMatch(message,["お題をお願いします","お題お願い","秘密のお題"])){await revealMimeByVoice();return true}
+ if(state.gameId==="mime"&&!isMatch(message,["次のお題","次の問題"])&&isMatch(message,["お題をお願いします","お題お願い","秘密のお題"])){await revealMimeByVoice();return true}
  if(state.gameId==="mime"&&isMatch(message,["ゲームスタート","ジェスチャースタート","回答スタート"])){await startMimePlay();return true}
  if(isMatch(message,["次のお題お願いします","次のお題","次の問題","次お願いします"])){if(!currentGame()){await say("先に、ゲーム名とパターンを指定してスタートしてください。");return true}if(state.questionIndex<0){await say("最初は、一問目スタート、と言ってください。");return true}if(state.questionIndex>=9)await finishGame();else await announceQuestion(state.questionIndex+1);return true}
  if(isMatch(message,["使い方","何て言えば","助けて","ヘルプ"])){await say(currentGame()?`現在は、${currentGame().name}、パターン${state.pattern}です。一問目スタート、次のお題お願いします、もう一度、前のお題、今は何問目、このゲームを終了、が使えます。`:"ゲーム名、パターン1、スタート、のように言ってください。");return true}
