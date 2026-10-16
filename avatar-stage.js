@@ -94,6 +94,10 @@ const persist=()=>{try{localStorage.setItem(saveKey,JSON.stringify(state))}catch
 const currentGame=()=>games[state.gameIndex]||games[0];
 const isMatch=(value,parts)=>parts.some(part=>value.includes(part));
 
+function teamNameInputs(names=state.names){
+ return names.map((name,index)=>`<label>${index+1}組目<input data-team-name="${index}" maxlength="14" value="${escapeHTML(name)}" placeholder="チーム${index+1}"></label>`).join("");
+}
+
 function adminMarkup(){
  if(!showAdmin)return "";
  const scoreRows=state.names.map((name,index)=>`<div class="score-row"><span>${escapeHTML(name)}　<strong>${state.scores[index]}点</strong></span><span><button data-action="score" data-team="${index}" data-points="1">+1</button><button data-action="score" data-team="${index}" data-points="3">+3</button><button data-action="score" data-team="${index}" data-points="5">+5</button></span></div>`).join("");
@@ -105,6 +109,7 @@ function adminMarkup(){
   <form id="settingsForm" class="settings-form">
    <label>チーム数<select id="adminTeams">${Array.from({length:9},(_,i)=>i+2).map(count=>`<option value="${count}"${count===state.names.length?" selected":""}>${count}</option>`).join("")}</select></label>
    <label>スタッフの呼び名<input id="adminStaff" maxlength="14" value="${escapeHTML(state.staff)}"></label>
+   <fieldset class="team-names"><legend>チーム名</legend><div id="teamNameFields" class="team-name-grid">${teamNameInputs()}</div><p>得点の音声指示にも使います。例：赤チームに5点</p></fieldset>
    <button type="submit">設定を保存</button>
   </form>
   <div class="voice-settings">
@@ -485,7 +490,26 @@ function closeAdmin(){
 function saveSettings(){
  const count=Math.max(2,Math.min(10,Number(document.getElementById("adminTeams")?.value||state.names.length)));
  const staff=String(document.getElementById("adminStaff")?.value||state.staff||"スタッフ").trim().slice(0,14)||"スタッフ";
- const oldScores=state.scores.slice();state.names=Array.from({length:count},(_,index)=>`チーム${index+1}`);state.scores=state.names.map((_,index)=>oldScores[index]||0);state.staff=staff;persist();render();
+ const inputs=Array.from(document.querySelectorAll?.("[data-team-name]")||[]);
+ const requested=Array.from({length:count},(_,index)=>String(inputs[index]?.value||state.names[index]||`チーム${index+1}`).trim().slice(0,14));
+ const used=new Set();
+ const names=requested.map((value,index)=>{
+  const base=value||`チーム${index+1}`;let candidate=base;let suffix=2;
+  while(used.has(norm(candidate))){const tail=String(suffix++);candidate=base.slice(0,Math.max(1,14-tail.length))+tail}
+  used.add(norm(candidate));return candidate;
+ });
+ const oldScores=state.scores.slice();state.names=names;state.scores=names.map((_,index)=>oldScores[index]||0);state.staff=staff;
+ if(state.lastScore?.teamIndex>=count)state.lastScore=null;
+ persist();render();
+}
+
+function refreshTeamNameFields(){
+ const container=document.getElementById("teamNameFields");
+ if(!container)return;
+ const count=Math.max(2,Math.min(10,Number(document.getElementById("adminTeams")?.value||state.names.length)));
+ const current=Array.from(document.querySelectorAll?.("[data-team-name]")||[]).map(input=>String(input.value||""));
+ const names=Array.from({length:count},(_,index)=>current[index]||state.names[index]||`チーム${index+1}`);
+ container.innerHTML=teamNameInputs(names);
 }
 
 function saveVoiceChoice(){
@@ -529,7 +553,10 @@ document.addEventListener("submit",event=>{
  if(event.target?.id==="settingsForm"){event.preventDefault();saveSettings();return}
  if(event.target?.id==="commandForm"){event.preventDefault();void runTypedCommand()}
 });
-document.addEventListener("change",event=>{if(event.target?.id==="adminVoice")saveVoiceChoice()});
+document.addEventListener("change",event=>{
+ if(event.target?.id==="adminVoice")saveVoiceChoice();
+ if(event.target?.id==="adminTeams")refreshTeamNameFields();
+});
 document.addEventListener("pointerdown",event=>{
  if(event.target?.closest?.(".admin-panel"))return;
  holdStart={x:event.clientX,y:event.clientY};clearTimeout(holdTimer);

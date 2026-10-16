@@ -1,5 +1,5 @@
 const root='https://saiko-world-grand-prix.pages.dev';
-const checks=[['/','coach-avatar-speaking.png'],['/avatar.html','coach-avatar-speaking.png'],['/avatar-stage.js','adminCommand'],['/avatar-stage.css','.avatar-mouth'],['/coach-avatar.png','PNG'],['/coach-avatar-speaking.png','PNG']];
+const checks=[['/','coach-avatar-speaking.png'],['/avatar.html','coach-avatar-speaking.png'],['/avatar-stage.js','data-team-name'],['/avatar-stage.css','.team-name-grid'],['/coach-avatar.png','PNG'],['/coach-avatar-speaking.png','PNG']];
 for(const [path,mark] of checks){
  let ok=false,status=0,bytes=0;
  for(let i=0;i<10;i++){

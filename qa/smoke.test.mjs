@@ -23,6 +23,7 @@ test("アバター画像と音声進行の実装が存在する",()=>{
  assert.match(script,/speechSynthesis/);
  assert.match(script,/saiko-voice-choice-v1/);
  assert.match(script,/adminCommand/);
+ assert.match(script,/data-team-name/);
  assert.match(script,/説明終わ/);
  assert.match(script,/team_setup/);
  assert.match(script,/pending=\{type:"score"/);

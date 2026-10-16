@@ -31,6 +31,7 @@ button{cursor:pointer}
 .settings-form{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;margin-bottom:16px}
 .settings-form label{display:flex;flex-direction:column;gap:5px;font-weight:800;font-size:13px}
 .settings-form input,.settings-form select{width:100%;min-height:44px;border:1px solid #b8cedd;border-radius:10px;background:#fff;color:#17324a;padding:8px 10px}
+.team-names{grid-column:1/-1;margin:0;padding:12px;border:1px solid #c7dce7;border-radius:15px;background:#edf6fb}.team-names legend{padding:0 6px;font-size:14px;font-weight:900}.team-name-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.team-names p{margin:8px 0 0;color:#587181;font-size:11px}
 .voice-settings,.command-form{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;margin:12px 0;padding:12px;border-radius:15px;background:#edf6fb}
 .voice-settings label,.command-form label{display:flex;flex-direction:column;gap:5px;font-weight:800;font-size:13px}
 .voice-settings select,.command-form input{width:100%;min-height:44px;border:1px solid #b8cedd;border-radius:10px;background:#fff;color:#17324a;padding:8px 10px}
@@ -51,6 +52,6 @@ button{cursor:pointer}
 @keyframes ready-pulse{0%,100%{opacity:.2;transform:translate(-50%,-50%) scale(.9)}50%{opacity:.75;transform:translate(-50%,-50%) scale(1.03)}}
 @keyframes listen-ring{0%{opacity:.5;transform:translate(-50%,-50%) scale(.72)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.18)}}
 @keyframes talk-ring{0%{opacity:.65;transform:translate(-50%,-50%) scale(.82)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.08)}}
-@media(max-width:700px){.avatar-frame{width:min(96vw,610px);height:min(91dvh,880px)}.settings-form,.voice-settings,.command-form{grid-template-columns:1fr}.admin-panel{padding:17px}.score-row{align-items:flex-start;flex-direction:column}.admin-panel .close{margin-left:0}}
+@media(max-width:700px){.avatar-frame{width:min(96vw,610px);height:min(91dvh,880px)}.settings-form,.voice-settings,.command-form,.team-name-grid{grid-template-columns:1fr}.admin-panel{padding:17px}.score-row{align-items:flex-start;flex-direction:column}.admin-panel .close{margin-left:0}}
 @media(max-height:580px) and (orientation:landscape){.avatar-frame{width:min(58vw,520px);height:96dvh}.scene::before{height:38%}.scene::after{width:63vw}.admin-panel{max-height:94dvh}}
 @media(prefers-reduced-motion:reduce){.avatar-frame,.avatar-mouth,.voice-ring,.waiting .avatar-frame::after{animation:none!important}.talking .avatar-mouth{opacity:1}}

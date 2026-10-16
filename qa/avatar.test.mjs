@@ -38,9 +38,11 @@ const adminTeams={value:"5"};
 const adminStaff={value:"吉村"};
 const adminVoice={value:"Microsoft Nanami"};
 const adminCommand={value:""};
+const teamNameMocks=[{value:"赤チーム"},{value:"青チーム"},{value:"黄チーム"}];
 const document={
  hidden:false,
  getElementById(id){if(id==="stage")return markup;if(id==="adminTeams")return adminTeams;if(id==="adminStaff")return adminStaff;if(id==="adminVoice")return adminVoice;if(id==="adminCommand")return adminCommand;return null},
+ querySelectorAll(selector){return selector==="[data-team-name]"?teamNameMocks:[]},
  addEventListener(type,callback){(handlers[type]??=[]).push(callback)}
 };
 
@@ -140,6 +142,7 @@ test("長押し時だけ管理・復旧メニューを表示する",async()=>{
  assert.match(markup.innerHTML,/マイク再開/);
  assert.match(markup.innerHTML,/adminCommand/);
  assert.match(markup.innerHTML,/adminVoice/);
+ assert.match(markup.innerHTML,/data-team-name/);
  click("closeAdmin");
  assert.doesNotMatch(markup.innerHTML,/管理・復旧/);
 });
@@ -162,4 +165,19 @@ test("隠し画面で日本語音声を選び、試聴できる",async()=>{
  assert.equal(db.get("saiko-voice-choice-v1"),"Microsoft Nanami");
  assert.match(utterances.join(""),/いっしょに楽しみましょう/);
  click("closeAdmin");
+});
+
+test("チーム名を変更し、名前を使った音声得点に反映できる",async()=>{
+ dispatch("pointerdown",{target:{closest(){return null}},clientX:20,clientY:20});
+ await wait(10);
+ adminTeams.value="3";
+ dispatch("submit",{target:{id:"settingsForm"},preventDefault(){}});
+ assert.deepEqual(state().names,["赤チーム","青チーム","黄チーム"]);
+ assert.match(markup.innerHTML,/赤チーム/);
+ click("closeAdmin");
+ await wait();
+ await voice("青チームに3点");
+ await voice("はい");
+ assert.equal(state().scores[1],3);
+ assert.match(utterances.join(""),/青チームに3点/);
 });
