@@ -5,6 +5,7 @@ import vm from "node:vm";
 
 const dataScript=fs.readFileSync(new URL("../preset-game-data.js",import.meta.url),"utf8");
 const stageScript=fs.readFileSync(new URL("../preset-stage.js",import.meta.url),"utf8");
+const audioScript=fs.readFileSync(new URL("../preset-audio-manifest.js",import.meta.url),"utf8");
 const html=fs.readFileSync(new URL("../preset-preview.html",import.meta.url),"utf8");
 const css=fs.readFileSync(new URL("../preset-stage.css",import.meta.url),"utf8");
 
@@ -36,14 +37,12 @@ const window={
  addEventListener(){}
 };
 const elements={
- adminTeams:{value:"3"},adminStaff:{value:"スタッフ"},adminVoice:{value:"Microsoft Nanami"},adminCommand:{value:""},
- adminGame:{value:"sync"},adminPattern:{value:"1"},adminMode:{value:"team"},adminQuestion:{value:"0"}
+ adminCommand:{value:""},adminGame:{value:"sync"},adminPattern:{value:"1"},adminMode:{value:"team"},adminQuestion:{value:"0"}
 };
-const teamNames=[{value:"赤チーム"},{value:"青チーム"},{value:"黄チーム"}];
 const document={
  hidden:false,
  getElementById(id){return id==="stage"?markup:(elements[id]||null)},
- querySelectorAll(selector){return selector==="[data-team-name]"?teamNames:[]},
+ querySelectorAll(){return[]},
  addEventListener(type,callback){(handlers[type]??=[]).push(callback)}
 };
 const context={
@@ -82,10 +81,24 @@ test("確認版はAI生成APIを呼ばず、通常画面はアバターだけ",(
  assert.doesNotMatch(stageScript,/fetch\s*\(/);
  assert.doesNotMatch(stageScript,/api\/partner/);
  assert.match(html,/preset-game-data\.js/);
+ assert.match(html,/preset-audio-manifest\.js/);
  assert.match(html,/preset-stage\.js/);
+ assert.match(stageScript,/window\.SAIKO_PRESET_AUDIO/);
  assert.match(css,/\.secret-card/);
  assert.match(markup.innerHTML,/coach-avatar\.png/);
  assert.doesNotMatch(markup.innerHTML,/管理・復旧/);
+});
+
+test("自然音声400本をクラウド配信用に同梱し、全ファイルが存在する",()=>{
+ const audioWindow={};
+ vm.runInNewContext(audioScript,{window:audioWindow},{timeout:2500});
+ const manifest=audioWindow.SAIKO_PRESET_AUDIO;
+ assert.equal(Object.keys(manifest).length,400);
+ assert.match(manifest["タップを確認しました。マイクを準備します。"],/\.mp3$/);
+ for(const path of Object.values(manifest)){
+  const file=new URL(".."+path,import.meta.url);
+  assert.ok(fs.statSync(file).size>1000,`${path} is missing or empty`);
+ }
 });
 
 test("ゲーム、パターン、1問目、次のお題を音声で進める",async()=>{
@@ -147,6 +160,8 @@ test("長押しの管理画面に文字入力、手動進行、秘密表示が�
  assert.match(markup.innerHTML,/adminCommand/);
  assert.match(markup.innerHTML,/この問題から再開/);
  assert.match(markup.innerHTML,/秘密のお題を表示/);
+ assert.match(markup.innerHTML,/事前生成した自然な男性音声/);
+ assert.doesNotMatch(markup.innerHTML,/チーム名と得点/);
  click("closeAdmin");
  assert.doesNotMatch(markup.innerHTML,/管理・復旧/);
 });
