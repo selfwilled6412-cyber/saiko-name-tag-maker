@@ -32,6 +32,7 @@ try{
 
 let activated=false;
 let speaking=false;
+let preparingMic=false;
 let listeningWanted=false;
 let recognizerBusy=false;
 let micDenied=false;
@@ -99,7 +100,7 @@ function adminMarkup(){
 }
 
 function render(){
- root.className=`stage ${activated?"activated":"waiting"} ${speaking?"talking":recognizerBusy?"listening":"idle"}`;
+ root.className=`stage ${activated?"activated":"waiting"} ${speaking?"talking":preparingMic?"thinking":recognizerBusy?"listening":"idle"}`;
  root.innerHTML=`<div class="scene" aria-hidden="true"><div class="glow"></div><div class="voice-ring ring-one"></div><div class="voice-ring ring-two"></div></div><div class="avatar-frame"><div class="avatar-sprite"><img class="avatar-image avatar-idle" src="/coach-avatar.png" alt="サイ校ゲームの男性スポーツコーチ姿のアバター"><img class="avatar-image avatar-mouth" src="/coach-avatar-speaking.png" alt="" aria-hidden="true"></div></div>${!activated?'<button class="start-surface" data-action="activate" aria-label="画面を一度タップして音声ゲームを開始"></button>':""}<p class="sr-only" aria-live="assertive">${speaking?"アバターが話しています":recognizerBusy?"スタッフの声を聞いています":"音声待機中"}</p>${adminMarkup()}`;
 }
 
@@ -240,9 +241,28 @@ async function interpret(raw){
 }
 
 function undoScore(speakResult=false){const item=state.lastScore;if(!item||item.teamIndex<0||item.teamIndex>=state.scores.length){if(speakResult)void say("取り消せる得点はありません。");return}state.scores[item.teamIndex]=Math.max(0,state.scores[item.teamIndex]-item.points);state.lastScore=null;persist();render();if(speakResult)void say(`${state.names[item.teamIndex]}の直前の${item.points}点を取り消しました。`)}
-async function requestMicrophone(){if(!window.navigator?.mediaDevices?.getUserMedia)return true;try{const stream=await window.navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});stream.getTracks?.().forEach(track=>track.stop());return true}catch{return false}}
+function primeSpeech(){
+ if(!window.speechSynthesis||!window.SpeechSynthesisUtterance)return false;
+ try{
+  window.speechSynthesis.cancel();
+  const utterance=new window.SpeechSynthesisUtterance("タップを確認しました。マイクを準備します。");
+  utterance.lang="ja-JP";utterance.rate=.96;utterance.pitch=.92;utterance.volume=1;
+  const voice=chooseVoice();if(voice)utterance.voice=voice;
+  window.speechSynthesis.speak(utterance);return true;
+ }catch{return false}
+}
+async function requestMicrophone(){
+ if(!window.navigator?.mediaDevices?.getUserMedia)return true;
+ let timeoutId=0;
+ const media=window.navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}}).then(stream=>({stream}),error=>({error}));
+ const timeout=new Promise(resolve=>{timeoutId=setTimeout(()=>resolve({timeout:true}),8000)});
+ const result=await Promise.race([media,timeout]);clearTimeout(timeoutId);
+ if(result?.stream){result.stream.getTracks?.().forEach(track=>track.stop());return true}
+ if(result?.timeout)void media.then(late=>late?.stream?.getTracks?.().forEach(track=>track.stop()));
+ return false;
+}
 async function activate(){
- if(activated)return;activated=true;listeningWanted=true;micDenied=false;render();const granted=await requestMicrophone();if(!granted){micDenied=true;listeningWanted=false;render();await say("マイクを使えません。ブラウザのマイクを許可してから、画面を長押しして復旧メニューを開いてください。",{listenAfter:false});return}
+ if(activated)return;activated=true;preparingMic=true;listeningWanted=true;micDenied=false;render();primeSpeech();const granted=await requestMicrophone();preparingMic=false;if(!granted){micDenied=true;listeningWanted=false;render();await say("マイクの準備ができませんでした。Chromeでマイクを許可してから、画面を長押しして、マイク再開か文字入力を使ってください。",{listenAfter:false});return}
  const game=currentGame();if(state.started&&game){await say(`おかえりなさい。${game.name}、パターン${state.pattern}です。${state.questionIndex>=0?`今は第${state.questionIndex+1}問です。続けるときは、次のお題お願いします、と言ってください。`:"始めるときは、一問目スタート、と言ってください。"}`);return}
  state.started=true;state.phase="idle";persist();await say("こんにちは。サイ校ゲーム、プリセット確認版です。遊びたいゲーム名、パターン1、スタート、のように言ってください。例えば、ぴったりシンクロ、パターン1、スタート、です。");
 }

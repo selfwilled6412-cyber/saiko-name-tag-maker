@@ -13,6 +13,7 @@ const handlers={};
 const db=new Map();
 const utterances=[];
 const recognized=[];
+let microphoneRequestedAfter=0;
 
 class Utterance{constructor(text){this.text=text;this.onend=null;this.onerror=null}}
 class Recognition{
@@ -30,7 +31,7 @@ const window={
   cancel(){},
   speak(utterance){utterances.push(utterance.text);queueMicrotask(()=>utterance.onend?.())}
  },
- navigator:{mediaDevices:{getUserMedia:async()=>({getTracks(){return[{stop(){}}]}})}},
+ navigator:{mediaDevices:{getUserMedia:async()=>{microphoneRequestedAfter=utterances.length;return{getTracks(){return[{stop(){}}]}}}}},
  confirm(){return true},
  addEventListener(){}
 };
@@ -89,6 +90,8 @@ test("確認版はAI生成APIを呼ばず、通常画面はアバターだけ",(
 
 test("ゲーム、パターン、1問目、次のお題を音声で進める",async()=>{
  click("activate");await wait();
+ assert.ok(microphoneRequestedAfter>=1,"マイク要求より前に、タップへの音声反応が必要");
+ assert.match(utterances[0],/タップを確認しました/);
  await voice("ぴったりシンクロ、パターン2、スタート");
  assert.equal(snapshot().gameId,"sync");
  assert.equal(snapshot().pattern,2);

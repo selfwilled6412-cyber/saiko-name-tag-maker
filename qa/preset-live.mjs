@@ -1,9 +1,9 @@
 const base=process.env.BASE_URL||"https://saiko-world-grand-prix.pages.dev";
 const checks=[
- ["/preset-preview.html","preset-game-data.js"],
+ ["/preset-preview.html","preset-preview-2"],
  ["/preset-game-data.js","ぴったりシンクロ"],
  ["/preset-game-data.js","第二の人生"],
- ["/preset-stage.js","SAIKO_PRESET_GAMES"],
+ ["/preset-stage.js","タップを確認しました"],
  ["/preset-stage.js","新しい証拠お願いします"],
  ["/preset-stage.css",".secret-card"]
 ];
