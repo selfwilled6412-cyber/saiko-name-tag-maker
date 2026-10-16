@@ -21,3 +21,9 @@ test('空の裁判証拠、不正な種目、外部サイトからの投稿を�
  const r=new Request(url,{method:'POST',headers:{Origin:'https://example.com','Content-Type':'application/json'},body:JSON.stringify({mode:'court',kind:'chat'})});
  assert.equal((await onRequestPost({request:r,env:bad})).status,403);
 });
+test('不自然な裁判文や避ける表現は採用せず予備お題へ切り替える',async()=>{
+ const unnatural={AI:{run:async()=>({response:JSON.stringify({reply:'案です',title:'プリン裁判',prompt:'プリンはスイーツとして定義されるのか？',evidence:'新しい証拠です',options:[],criterion:'判定役が決める'})})}};
+ assert.equal((await onRequestPost({request:request('draft'),env:unnatural})).status,503);
+ const banned={AI:{run:async()=>({response:JSON.stringify({reply:'案です',title:'別案',prompt:'おバカな行動は有罪か？',evidence:'新しい証拠です',options:[],criterion:'判定役が決める'})})}};
+ assert.equal((await onRequestPost({request:request('draft'),env:banned})).status,503);
+});

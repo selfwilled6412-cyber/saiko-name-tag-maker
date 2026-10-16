@@ -41,10 +41,11 @@ async function onRequestPost({request,env}){
    const clean=raw.replace(/<[^>]*>/g,"").replace(/^\s*(アバター|AI|アシスタント)\s*[:：]\s*/,"").split(/\n\s*(スタッフ|司会者|ユーザー)\s*[:：]/)[0].trim();
    return replyJSON({kind,provider:"workers-ai",reply:clean.slice(0,245)});
   }
-  const obj=typeof responseValue==="object"&&responseValue!==null?responseValue:parseJSON(raw);let prompt=String(obj.prompt||"").trim().slice(0,220);
-  if(mode==="court"&&!/有罪/.test(prompt)){prompt=prompt.replace(/は[？?]$/,"は有罪か？");if(!/有罪/.test(prompt))prompt=prompt.replace(/[？?。\s]+$/,"")+"。この行為は有罪か？";}
+   const obj=typeof responseValue==="object"&&responseValue!==null?responseValue:parseJSON(raw);const prompt=String(obj.prompt||"").trim().slice(0,220);
   const options=Array.isArray(obj.options)?obj.options.slice(0,2).map(x=>String(x||"").trim().slice(0,80)).filter(Boolean):[];
-  if(!prompt)throw Error("empty_prompt");
+   if(!prompt)throw Error("empty_prompt");
+   if(/おバカ|インチキ/.test(prompt))throw Error("wording");
+   if(mode==="court"&&!/有罪か[？?]?$/.test(prompt))throw Error("court_wording");
   if(["sync","choice"].includes(mode)&&(options.length!==2||options[0]===options[1]))throw Error("options");
   if(mode==="court"&&!String(obj.evidence||"").trim())throw Error("evidence");
   return replyJSON({kind,provider:"workers-ai",
