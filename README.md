@@ -4,6 +4,8 @@
 
 スタッフ用カンペ: https://saiko-world-grand-prix.pages.dev/host-cue-sheet.html
 
+スタッフ・利用者向け説明資料: https://saiko-world-grand-prix.pages.dev/game-guide.html
+
 ## 使い方
 
 1. 本番URLをChromeまたはEdgeで開く。

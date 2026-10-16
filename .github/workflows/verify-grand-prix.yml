@@ -13,6 +13,7 @@ on:
       - 'coach-avatar-speaking.png'
       - 'manifest.webmanifest'
       - 'host-cue-sheet.html'
+      - 'game-guide.html'
       - 'game-v3.css'
       - 'game-v4.css'
       - 'new-game.html'
