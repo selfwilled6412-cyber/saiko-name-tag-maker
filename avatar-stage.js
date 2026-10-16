@@ -1,223 +1,488 @@
-(function voiceHost(){
+(function voiceOnlyHost(){
 "use strict";
+
 const games=[
-{id:"sync",name:"ぴったりシンクロ",rule:"同じチームの二人が、相談せずに二択から一つを選ぶゲームです。答えが同じなら成功！"},
-{id:"pitch",name:"おすすめプレゼン",rule:"身近なものを、とっておきの商品として三十秒で紹介します。言葉の工夫を競います。"},
-{id:"mime",name:"ジェスチャー対決",rule:"言葉を使わずに、お題の場面をジェスチャーで伝えます。絵で伝えても大丈夫です。"},
-{id:"court",name:"もしも裁判",rule:"検察チームと弁護チームが意見を出して、判定役が勝ちを決めます。途中で新しい証拠も出ます。"},
-{id:"press",name:"記者会見チャレンジ",rule:"思いがけない質問に、五秒以内で答えるゲームです。はい、いいえ、わかりません、は禁止です。"},
-{id:"choice",name:"どっちを選ぶ？",rule:"どちらを選ぶか、チームで理由も考えるゲームです。正解は一つではありません。"},
-{id:"challenge",name:"ぴったりチャレンジ",rule:"時間や回数を比べる、気軽にできる記録対決です。"}];
+ {id:"sync",name:"ぴったりシンクロ",rule:"同じチームの二人が、相談せずに二つの選択肢から一つを選びます。答えが同じなら成功です。"},
+ {id:"pitch",name:"おすすめプレゼン",rule:"身近なものを、とっておきの商品として三十秒で紹介します。言葉の工夫を競います。"},
+ {id:"mime",name:"ジェスチャー対決",rule:"言葉を使わず、お題の場面をジェスチャーで伝えます。絵で伝えても大丈夫です。"},
+ {id:"court",name:"もしも裁判",rule:"検察チームと弁護チームが意見を出し、判定役が勝ちを決めます。途中で新しい証拠も出ます。"},
+ {id:"press",name:"記者会見チャレンジ",rule:"思いがけない質問に、五秒以内で答えます。はい、いいえ、わかりません、は禁止です。"},
+ {id:"choice",name:"どっちを選ぶ？",rule:"二つの選択肢から一つを選び、チームで理由も考えます。正解は一つではありません。"},
+ {id:"challenge",name:"ぴったりチャレンジ",rule:"時間や回数を比べる、安全で気軽な記録対決です。"}
+];
+
 const examples={
-sync:[{prompt:"旅行に行くなら、海と山のどちら？",options:["海","山"]},{prompt:"朝に飲むなら、お茶とコーヒーのどちら？",options:["お茶","コーヒー"]}],
-pitch:[{prompt:"目の前にある紙コップを、世界に一つの宝物として紹介してみよう！",criterion:"三十秒以内に、良いところを二つ言えたら成功！"},{prompt:"いつもの鉛筆を、百万円の商品だと思って紹介しよう！",criterion:"三十秒以内に、魅力を二つ伝えたら成功！"}],
-mime:[{prompt:"猫が初めて洗濯機を見て、びっくりしている場面を伝えよう。",criterion:"相手が場面を当てられたら成功！"},{prompt:"ペンギンが電車に乗ろうとして、切符を探している場面を伝えよう。"}],
-court:[{prompt:"最後のプリンを食べた人は、有罪か？",evidence:"実は、プリンには「どうぞ食べてください」とメモがあった！"},{prompt:"みんなの唐揚げに無断でレモンをかけたら、有罪か？",evidence:"その人は、みんなにレモンが好きか聞いたつもりだった！"}],
-press:[{prompt:"社長が会社の会議を全部カラオケにしたのはなぜですか？"},{prompt:"新しい制服がパジャマになった理由を教えてください。"}],
-choice:[{prompt:"一日だけ使えるなら、どちらの能力がいい？",options:["空を飛べる","動物と話せる"]},{prompt:"旅をするならどっち？",options:["無人島","宇宙ステーション"]}],
-challenge:[{prompt:"目を閉じて、ちょうど十秒だと思ったら手を上げてね。",criterion:"十秒との誤差が一番小さかった人が勝ち！"},{prompt:"座ったまま、十五秒をぴったり当ててみよう。",criterion:"時間のずれが少ないほど高得点。"}]
+ sync:[
+  {prompt:"旅行に行くなら、海と山のどちら？",options:["海","山"]},
+  {prompt:"朝に飲むなら、お茶とコーヒーのどちら？",options:["お茶","コーヒー"]},
+  {prompt:"休日に出かけるなら、動物園と水族館のどちら？",options:["動物園","水族館"]}
+ ],
+ pitch:[
+  {prompt:"目の前にある紙コップを、世界に一つの宝物として紹介してみよう。",criterion:"三十秒以内に、良いところを二つ言えたら成功です。"},
+  {prompt:"いつもの鉛筆を、特別な一本として紹介してみよう。",criterion:"三十秒以内に、魅力を二つ伝えたら成功です。"},
+  {prompt:"何も入っていない箱を、便利な新商品として紹介してみよう。",criterion:"三十秒以内に、使い道を二つ伝えたら成功です。"}
+ ],
+ mime:[
+  {prompt:"猫が初めて洗濯機を見て、びっくりしている場面を伝えよう。",criterion:"相手が場面を当てられたら成功です。"},
+  {prompt:"ペンギンが電車に乗ろうとして、切符を探している場面を伝えよう。",criterion:"相手が場面を当てられたら成功です。"},
+  {prompt:"宇宙飛行士が、無重力でくしゃみをした場面を伝えよう。",criterion:"相手が場面を当てられたら成功です。"}
+ ],
+ court:[
+  {prompt:"最後のプリンを食べた人は、有罪か？",evidence:"プリンには、どうぞ食べてください、とメモがありました。"},
+  {prompt:"みんなの唐揚げに無断でレモンをかけたら、有罪か？",evidence:"本人は、全員に確認したつもりだったようです。"},
+  {prompt:"休憩室の時計を五分進めた人は、有罪か？",evidence:"遅刻を減らしたくて、みんなを思ってしたことでした。"}
+ ],
+ press:[
+  {prompt:"会社の会議を全部カラオケにしたのは、なぜですか？"},
+  {prompt:"新しい制服をパジャマにした理由を教えてください。"},
+  {prompt:"社内のあいさつを全部、動物の鳴き声にしたのはなぜですか？"}
+ ],
+ choice:[
+  {prompt:"一日だけ使えるなら、どちらの能力がいい？",options:["空を飛べる","動物と話せる"]},
+  {prompt:"旅をするなら、どちらがいい？",options:["無人島","宇宙ステーション"]},
+  {prompt:"一週間暮らすなら、どちらがいい？",options:["大きな船","大きな列車"]}
+ ],
+ challenge:[
+  {prompt:"目を閉じて、ちょうど十秒だと思ったら手を上げてください。",criterion:"十秒との誤差が一番小さい人が勝ちです。"},
+  {prompt:"座ったまま、十五秒をぴったり当ててください。",criterion:"時間のずれが一番少ない人が勝ちです。"},
+  {prompt:"片手で十秒間に何回、指を開いて閉じられるか挑戦してください。",criterion:"正しくできた回数が一番多い人が勝ちです。"}
+ ]
 };
+
 const root=document.getElementById("stage");
-const saveKey="saiko-voice-host-v1";
-const escapeHTML=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const norm=x=>String(x||"").normalize("NFKC").replace(/\s/g,"").toLowerCase();
-const empty=()=>({started:false,phase:"ready",gameIndex:0,questionNumber:0,names:["チーム1","チーム2","チーム3"],scores:[0,0,0],staff:"吉村",lastExample:"",question:null,lastAnswer:"",recent:[],courtRound:0});
+const saveKey="saiko-voice-host-v2";
+const legacyKey="saiko-voice-host-v1";
+const empty=()=>({
+ started:false,phase:"ready",gameIndex:0,questionNumber:0,
+ names:["チーム1","チーム2","チーム3"],scores:[0,0,0],staff:"吉村",
+ lastExample:"",question:null,recent:[],lastScore:null
+});
 let state=empty();
-try{const s=JSON.parse(localStorage.getItem(saveKey)||"null");if(s?.started&&Array.isArray(s.names)&&s.names.length>=2&&s.names.length<=10)state={...empty(),...s};}catch{}
-let avatarText="こんにちは！今日は、みんなで楽しいゲームに挑戦しよう♪";
-let statusText="🌷 準備中",lastSpeech=avatarText;
-let activated=false,speaking=false,working=false,recognition=null,listeningWanted=false,micDenied=false,recognizerBusy=false,requestVersion=0,voiceTurn=0,speakTimer=null;
-let showSetup=!state.started,showType="",textPanel=false;
+try{
+ const saved=JSON.parse(localStorage.getItem(saveKey)||localStorage.getItem(legacyKey)||"null");
+ if(saved?.started&&Array.isArray(saved.names)&&saved.names.length>=2&&saved.names.length<=10){
+  state={...empty(),...saved};
+  state.scores=state.names.map((_,i)=>Number(saved.scores?.[i])||0);
+ }
+}catch{}
+
+let activated=false;
+let speaking=false;
+let working=false;
+let listeningWanted=false;
+let recognizerBusy=false;
+let micDenied=false;
+let recognition=null;
+let recognitionEpoch=0;
+let recognitionRetry=0;
+let listenTimer=0;
+let speechTimer=0;
+let speechJob=0;
+let lastSpeech="";
+let lastHeardAt=0;
+let showAdmin=false;
+let pending=null;
+let holdTimer=0;
+let holdStart=null;
+
+const escapeHTML=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+const norm=value=>String(value||"").normalize("NFKC").toLowerCase().replace(/[\s、。！？!?,.・「」『』（）()]/g,"");
 const persist=()=>{try{localStorage.setItem(saveKey,JSON.stringify(state))}catch{}};
-const avatarSVG=`<svg class="avatar" viewBox="0 0 300 340" role="img" aria-label="ゲーム案内役のうさぎアバター、もこ">
-<ellipse cx="150" cy="314" rx="90" ry="18" fill="#e6d2dc" opacity=".6"/>
-<path d="M94 133 Q39 85 65 25 Q100 -5 121 88" fill="#fff" stroke="#dfb1c4" stroke-width="7"/>
-<path d="M206 133 Q261 85 235 25 Q200 -5 179 88" fill="#fff" stroke="#dfb1c4" stroke-width="7"/>
-<path d="M84 80 Q74 41 85 25 Q101 37 107 91" fill="#ffd1e2"/>
-<path d="M216 80 Q226 41 215 25 Q199 37 193 91" fill="#ffd1e2"/>
-<ellipse cx="150" cy="210" rx="112" ry="116" fill="#fffafc" stroke="#e9c0d3" stroke-width="7"/>
-<ellipse class="eye" cx="103" cy="188" rx="10" ry="17" fill="#5d4c6a"/>
-<ellipse class="eye" cx="197" cy="188" rx="10" ry="17" fill="#5d4c6a"/>
-<ellipse cx="79" cy="213" rx="20" ry="10" fill="#ffb4c9"/>
-<ellipse cx="221" cy="213" rx="20" ry="10" fill="#ffb4c9"/>
-<path d="M144 226 Q150 222 156 226 Q151 234 149 234Z" fill="#e28aa5"/>
-<path class="mouth" d="M138 240 Q150 254 162 240" stroke="#a9718e" stroke-width="5" fill="none" stroke-linecap="round"/>
-<circle cx="238" cy="111" r="23" fill="#fc9fba"/><path d="M226 109 L237 118 251 98" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M127 308 Q100 287 114 283 Q126 282 150 302 Q174 282 186 283 Q200 287 173 308 Q192 330 174 330 L150 315 126 330 Q108 330 127 308Z" fill="#9f85d9"/>
-</svg>`;
-function badge(){return `${state.questionNumber?"第"+(state.gameIndex+1)+"ゲーム・"+state.questionNumber+"問目":"第"+(state.gameIndex+1)+"ゲーム"}　${games[state.gameIndex].name}`;}
-function overlay(){
- if(showSetup)return `<section class="overlay" role="dialog" aria-modal="true"><div class="panel"><h2>🌸 ゲームを始めよう！</h2><p>はじめにマイクの使用を許可してね。開始後は、アバターに声をかけるだけで進められます。</p><div class="form-grid"><label class="field">チーム数（2〜10）<select id="teams">${Array.from({length:9},(_,i)=>i+2).map(n=>`<option value="${n}"${n===state.names.length?" selected":""}>${n}チーム</option>`).join("")}</select></label><label class="field">スタッフの呼び名<input id="staffName" maxlength="15" value="${escapeHTML(state.staff)}" placeholder="スタッフ"></label></div><p>対応環境：マイク付きのChrome・Edgeなど。音声が使えない端末では文字入力でも進められます。音声案内は端末から聞こえる音量にしてください。</p><div class="actions"><button class="primary" data-action="begin">🎙️ ゲームを始める</button><button data-action="dismiss">あとで</button></div></div></section>`;
- if(showType==="scores")return `<div class="overlay" role="dialog" aria-modal="true"><section class="panel"><h2>🏆 現在の得点</h2>${state.names.map((n,i)=>`<p><strong>${escapeHTML(n)}</strong>　${state.scores[i]}点</p>`).join("")}<p>声で「チーム1に5点」「次のお題」「次のゲーム」と話しかけられます。</p><div class="actions"><button data-action="close">閉じる</button><button data-action="newGame">新しい大会にする</button></div></section></div>`;
- if(showType==="help")return `<div class="overlay" role="dialog" aria-modal="true"><section class="panel"><h2>🎙️ 声で進める操作</h2><p>「説明終わった」→本番のお題へ</p><p>「次のお題」→同じゲームの新しい問題</p><p>「次のゲーム」→次の競技の例題から</p><p>「もう一度」→同じ案内を読む</p><p>「チーム1に5点」→得点加算</p><p>「順位を教えて」→現在の得点を読み上げ</p><p>「もっと簡単に」→新しいお題案を生成</p><p>音声認識が使えない場合は「文字で話す」を利用してね。</p><div class="actions"><button data-action="listen">🎙️ マイク再開</button><button data-action="text">✏️ 文字で話す</button><button data-action="scores">🏆 得点</button><button data-action="close">閉じる</button><button data-action="newGame">新しい大会にする</button></div></section></div>`;
+const currentGame=()=>games[state.gameIndex]||games[0];
+const isMatch=(value,parts)=>parts.some(part=>value.includes(part));
+
+function adminMarkup(){
+ if(!showAdmin)return "";
+ const scoreRows=state.names.map((name,index)=>`<div class="score-row"><span>${escapeHTML(name)}　<strong>${state.scores[index]}点</strong></span><span><button data-action="score" data-team="${index}" data-points="1">+1</button><button data-action="score" data-team="${index}" data-points="3">+3</button><button data-action="score" data-team="${index}" data-points="5">+5</button></span></div>`).join("");
+ return `<div class="admin-backdrop"><section class="admin-panel" role="dialog" aria-modal="true" aria-label="管理と復旧">
+  <h1>管理・復旧</h1>
+  <p class="admin-state">${escapeHTML(currentGame().name)}／${escapeHTML(state.phase)}／マイク ${micDenied?"要確認":recognizerBusy?"聞き取り中":"待機"}</p>
+  <form id="settingsForm" class="settings-form">
+   <label>チーム数<select id="adminTeams">${Array.from({length:9},(_,i)=>i+2).map(count=>`<option value="${count}"${count===state.names.length?" selected":""}>${count}</option>`).join("")}</select></label>
+   <label>スタッフの呼び名<input id="adminStaff" maxlength="14" value="${escapeHTML(state.staff)}"></label>
+   <button type="submit">設定を保存</button>
+  </form>
+  <div class="admin-actions"><button data-action="resume">マイク再開</button><button data-action="repeat">もう一度読む</button><button data-action="nextQuestion">次のお題</button><button data-action="nextGame">次のゲーム</button></div>
+  <div class="score-list">${scoreRows}</div>
+  <div class="admin-actions"><button data-action="undoScore">直前の得点を戻す</button><button data-action="reset" class="danger">新しい大会</button><button data-action="closeAdmin" class="close">閉じる</button></div>
+  <p class="admin-note">この画面は通常非表示です。閉じたあとは声だけで進行します。</p>
+ </section></div>`;
+}
+
+function render(){
+ root.className=`stage ${activated?"activated":"waiting"} ${speaking?"talking":recognizerBusy?"listening":"idle"}`;
+ root.innerHTML=`<div class="scene" aria-hidden="true"><div class="glow"></div><div class="voice-ring ring-one"></div><div class="voice-ring ring-two"></div></div>
+  <div class="avatar-frame"><img class="avatar-image" src="/coach-avatar.png" alt="サイ校ゲームの男性スポーツコーチ姿のアバター"></div>
+  ${!activated?'<button class="start-surface" data-action="activate" aria-label="画面を一度タップして音声ゲームを開始"></button>':""}
+  <p class="sr-only" aria-live="assertive">${speaking?"アバターが話しています":recognizerBusy?"スタッフの声を聞いています":"音声待機中"}</p>
+  ${adminMarkup()}`;
+}
+
+function clearListenTimer(){clearTimeout(listenTimer);listenTimer=0;}
+function stopListening(){
+ clearListenTimer();
+ recognitionEpoch++;
+ const old=recognition;
+ recognition=null;
+ recognizerBusy=false;
+ if(old){try{old.onend=null;old.onerror=null;old.onresult=null;old.abort?.()}catch{try{old.stop?.()}catch{}}}
+}
+
+function cancelSpeech(){
+ speechJob++;
+ clearTimeout(speechTimer);
+ speechTimer=0;
+ try{window.speechSynthesis?.cancel?.()}catch{}
+ speaking=false;
+}
+
+function chooseVoice(){
+ const voices=window.speechSynthesis?.getVoices?.()||[];
+ return voices.find(voice=>voice.lang==="ja-JP"&&/google|microsoft|kyoko|haruka|ichiro|nanami/i.test(voice.name))||voices.find(voice=>String(voice.lang).startsWith("ja"))||null;
+}
+
+function speechChunks(text){
+ const clean=String(text||"").replace(/\s+/g," ").trim();
+ if(!clean)return [];
+ const sentences=clean.match(/[^。！？!?]+[。！？!?]?/g)||[clean];
+ const chunks=[];
+ for(const sentence of sentences){
+  if(sentence.length<=105){chunks.push(sentence.trim());continue}
+  for(let i=0;i<sentence.length;i+=95)chunks.push(sentence.slice(i,i+95).trim());
+ }
+ return chunks.filter(Boolean);
+}
+
+function say(text,{listenAfter=true}={}){
+ const spoken=String(text||"").replace(/\s+/g," ").trim();
+ if(!spoken)return Promise.resolve();
+ lastSpeech=spoken;
+ stopListening();
+ cancelSpeech();
+ speaking=true;
+ render();
+ const job=++speechJob;
+ const chunks=speechChunks(spoken);
+ return new Promise(resolve=>{
+  const finish=()=>{
+   if(job!==speechJob){resolve();return}
+   clearTimeout(speechTimer);speechTimer=0;speaking=false;render();resolve();
+   if(listenAfter)queueListen(900);
+  };
+  const play=index=>{
+   if(job!==speechJob){resolve();return}
+   if(index>=chunks.length){finish();return}
+   if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){finish();return}
+   const utterance=new window.SpeechSynthesisUtterance(chunks[index]);
+   utterance.lang="ja-JP";utterance.rate=0.92;utterance.pitch=1.02;utterance.volume=1;
+   const voice=chooseVoice();if(voice)utterance.voice=voice;
+   let ended=false;
+   const next=()=>{if(ended||job!==speechJob)return;ended=true;clearTimeout(speechTimer);play(index+1)};
+   utterance.onend=next;utterance.onerror=next;
+   speechTimer=setTimeout(next,Math.min(30000,7000+chunks[index].length*230));
+   try{window.speechSynthesis.speak(utterance)}catch{next()}
+  };
+  setTimeout(()=>play(0),120);
+ });
+}
+
+function queueListen(delay=700){
+ clearListenTimer();
+ if(!activated||!listeningWanted||speaking||working||showAdmin||micDenied)return;
+ listenTimer=setTimeout(()=>{
+  if(!activated||!listeningWanted||speaking||working||showAdmin||micDenied||recognizerBusy)return;
+  startRecognition();
+ },delay);
+}
+
+function bestTranscript(event){
+ const results=event?.results;
+ if(!results)return "";
+ for(let i=results.length-1;i>=0;i--){
+  if(results[i]?.isFinal===false)continue;
+  const choices=Array.from(results[i]||[]).map(item=>({text:String(item?.transcript||"").trim(),confidence:Number(item?.confidence)||0})).filter(item=>item.text);
+  choices.sort((a,b)=>b.confidence-a.confidence);
+  if(choices[0]?.text)return choices[0].text;
+ }
  return "";
 }
-function render(){
- root.className="stage "+(state.started?"started ":"")+(speaking?"talking ":"")+(recognizerBusy?"listening":"sleeping");
- root.innerHTML=`<div class="stars"><span class="star">✦</span><span class="star">✧</span><span class="star">★</span><span class="star">✦</span></div>
- <button class="tiny-menu" data-action="help" aria-label="設定と音声コマンド">⚙️</button>
- <div class="brand"><small>SAIKO HAPPY GAME SHOW</small>サイ校 わくわくゲームショー</div>
- <div class="speaker">
- ${state.started?`<div class="game-info">${escapeHTML(badge())}</div>`:""}
- <div class="character-area">${avatarSVG}<div class="status ${speaking?"talking":recognizerBusy?"listening":""}">${escapeHTML(statusText)}</div></div>
- <div class="speech"><p>${escapeHTML(avatarText)}</p></div></div>
- <div class="foot">
- ${!state.started?`<button class="primary" data-action="openSetup">はじめる</button>`:activated&&!micDenied?`<span class="hint">🌸 もこに話しかけてね</span>`:`<button class="mint" data-action="listen">🎙️ マイクを再開</button><button data-action="text">文字で話す</button>`}
- </div><p class="hint">${state.started?"「説明終わった」「次のお題」など、アバターに話しかけてね。":"マイクの利用は最初の一度だけ確認します。"}</p>
- ${overlay()}${textPanel?`<form class="input-fallback" id="textForm"><input id="textLine" placeholder="スタッフの返事を入力" maxlength="230" aria-label="文字で返事"><button type="submit">伝える</button><button type="button" data-action="text">閉じる</button></form>`:""}`;
-}
-function status(text){statusText=text;render()}
-function stopListening(){
- try{if(recognition){recognition.onend=null;recognition.stop();}}catch{}
- recognition=null;recognizerBusy=false;
-}
-function speechVoice(){
- const all=window.speechSynthesis?.getVoices?.()||[];
- return all.find(v=>v.lang==="ja-JP"&&v.name.toLowerCase().includes("google"))||all.find(v=>v.lang.startsWith("ja"))||null;
-}
-function say(text,{after=true}={}){
- const spoken=String(text).replace(/\s+/g," ").trim();
- if(!spoken)return;
- lastSpeech=spoken;avatarText=spoken;speaking=true;statusText="🐰 もこがお話し中";stopListening();render();
- const done=()=>{if(!speaking)return;clearTimeout(speakTimer);speaking=false;statusText="🎙️ スタッフの声を待っているよ";render();if(after)queueListen()};
- try{
-  if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){done();return}
-  window.speechSynthesis.cancel();
-  const utter=new window.SpeechSynthesisUtterance(spoken);
-  utter.lang="ja-JP";utter.rate=0.91;utter.pitch=1.15;utter.volume=1;
-  const v=speechVoice();if(v)utter.voice=v;
-  utter.onend=done;utter.onerror=done;
-  clearTimeout(speakTimer);speakTimer=setTimeout(done,Math.min(80000,9000+spoken.length*310));
-  window.speechSynthesis.speak(utter);
- }catch{done();}
-}
-function queueListen(){
- if(!activated||!listeningWanted||speaking||working||showSetup||micDenied)return;
- setTimeout(()=>{if(!activated||!listeningWanted||speaking||working||recognizerBusy||micDenied)return;listen()},380);
-}
-function listen(){
- const Speech=window.SpeechRecognition||window.webkitSpeechRecognition;
- if(!Speech){micDenied=true;statusText="文字入力モードを使ってね";render();return}
+
+function startRecognition(){
+ const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SpeechRecognition){
+  micDenied=true;listeningWanted=false;render();
+  void say("このブラウザでは音声認識を使えません。画面を長押しすると、復旧メニューを開けます。",{listenAfter:false});
+  return;
+ }
  stopListening();
+ const epoch=recognitionEpoch;
  try{
-  const rec=new Speech();recognition=rec;rec.lang="ja-JP";rec.continuous=false;rec.interimResults=false;rec.maxAlternatives=1;
-  rec.onresult=e=>{const words=String(e.results?.[0]?.[0]?.transcript||"").trim();recognizerBusy=false;recognition=null;if(words)void interpret(words);};
-  rec.onerror=e=>{recognizerBusy=false;if(["not-allowed","service-not-allowed","audio-capture"].includes(e.error)){micDenied=true;activated=false;listeningWanted=false;statusText="マイクを使えないので文字入力を使ってね";render()}};
-  rec.onend=()=>{recognizerBusy=false;recognition=null;if(!working&&!speaking)queueListen();};
-  rec.start();recognizerBusy=true;statusText="🎙️ 聞いているよ";render();
- }catch{recognizerBusy=false;statusText="マイクを準備できませんでした";render()}
+  const recognizer=new SpeechRecognition();
+  recognition=recognizer;
+  recognizer.lang="ja-JP";recognizer.continuous=false;recognizer.interimResults=false;recognizer.maxAlternatives=3;
+  recognizer.onstart=()=>{if(epoch!==recognitionEpoch)return;recognizerBusy=true;recognitionRetry=0;render()};
+  recognizer.onresult=event=>{
+   if(epoch!==recognitionEpoch)return;
+   const words=bestTranscript(event);
+   recognizerBusy=false;recognition=null;lastHeardAt=Date.now();render();
+   if(words)void interpret(words);
+   else queueListen(650);
+  };
+  recognizer.onerror=event=>{
+   if(epoch!==recognitionEpoch)return;
+   const code=String(event?.error||"");
+   recognizerBusy=false;recognition=null;render();
+   if(["not-allowed","service-not-allowed","audio-capture"].includes(code)){
+    micDenied=true;listeningWanted=false;
+    void say("マイクを使えないみたいです。画面を長押しして、復旧メニューからマイクを再開してください。",{listenAfter:false});
+    return;
+   }
+   recognitionRetry=Math.min(recognitionRetry+1,5);
+   queueListen(code==="network"?Math.min(8000,800*Math.pow(2,recognitionRetry)):700);
+  };
+  recognizer.onend=()=>{
+   if(epoch!==recognitionEpoch)return;
+   recognizerBusy=false;recognition=null;render();
+   if(!speaking&&!working)queueListen(700);
+  };
+  recognizer.start();
+ }catch{
+  recognizerBusy=false;recognition=null;recognitionRetry=Math.min(recognitionRetry+1,5);render();queueListen(Math.min(5000,500*recognitionRetry));
+ }
 }
-const isMatch=(s,parts)=>parts.some(x=>s.includes(x));
-function rank(){const rows=state.scores.map((v,i)=>({i,v})).sort((a,b)=>b.v-a.v);return rows.map((x,i)=>`${i+1}位、${state.names[x.i]}、${x.v}点`).join("。")}
-function addPoints(message){
+
+function parseJapaneseNumber(value){
+ const input=norm(value);
+ const arabic=input.match(/\d{1,3}/);if(arabic)return Number(arabic[0]);
+ const digits={零:0,〇:0,一:1,二:2,三:3,四:4,五:5,六:6,七:7,八:8,九:9};
+ if(input==="十")return 10;
+ const ten=input.indexOf("十");
+ if(ten>=0){const left=ten===0?1:(digits[input[ten-1]]??0);const right=ten===input.length-1?0:(digits[input[ten+1]]??0);return left*10+right}
+ for(const [key,valueNumber] of Object.entries(digits))if(input.includes(key))return valueNumber;
+ return NaN;
+}
+
+function parseTeamCount(message){
+ const text=norm(message).replace(/チーム|組/g,"");
+ const count=parseJapaneseNumber(text);
+ return Number.isInteger(count)&&count>=2&&count<=10?count:null;
+}
+
+function parseScore(message){
  const line=norm(message);
- const points=line.match(/([135])点/);if(!points)return false;
- const n=Number(points[1]);let index=-1;
- const number=line.match(/(?:チーム|team)([1-9]|10)/);
- if(number)index=Number(number[1])-1;
- if(index<0)for(let i=0;i<state.names.length;i++)if(line.includes(norm(state.names[i])))index=i;
- const al=line.match(/(?:^|チーム)([a-j])(?:に|へ|が)/);if(index<0&&al)index=al[1].charCodeAt(0)-97;
- if(index<0||index>=state.names.length)return false;
- state.scores[index]+=n;persist();say(`${state.names[index]}に${n}点を加えました！今は${state.scores[index]}点だよ。`);return true;
+ if(!line.includes("点"))return null;
+ let teamIndex=-1;
+ const direct=line.match(/(?:チーム|team)(10|[1-9]|[一二三四五六七八九十])/i);
+ if(direct)teamIndex=parseJapaneseNumber(direct[1])-1;
+ if(teamIndex<0){
+  for(let i=0;i<state.names.length;i++)if(line.includes(norm(state.names[i]))){teamIndex=i;break}
+ }
+ const pointMatch=line.match(/(?:に|へ|が)?(\d{1,2}|[一二三四五六七八九十]{1,3})点/);
+ if(!pointMatch)return null;
+ const points=parseJapaneseNumber(pointMatch[1]);
+ if(teamIndex<0||teamIndex>=state.names.length||!Number.isInteger(points)||points<1||points>99)return null;
+ return {teamIndex,points};
 }
+
+function rankedText(){
+ const rows=state.scores.map((score,index)=>({score,index})).sort((a,b)=>b.score-a.score||a.index-b.index);
+ let previous=null;let rank=0;
+ return rows.map((row,index)=>{if(row.score!==previous){rank=index+1;previous=row.score}return `${rank}位、${state.names[row.index]}、${row.score}点`}).join("。")+"。";
+}
+
 function fallback(mode,exclude=""){
  const list=examples[mode]||examples.sync;
- const item=list.find(x=>x.prompt!==exclude)||list[0];
- return{mode,title:games.find(g=>g.id===mode).name,prompt:item.prompt,options:item.options||[],evidence:item.evidence||"",criterion:item.criterion||""};
+ const blocked=new Set([exclude,...state.recent.slice(-8)].filter(Boolean));
+ const candidates=list.filter(item=>!blocked.has(item.prompt));
+ const pool=candidates.length?candidates:list;
+ const item=pool[Math.floor(Math.random()*pool.length)];
+ return {mode,title:currentGame().name,prompt:item.prompt,options:item.options||[],evidence:item.evidence||"",criterion:item.criterion||""};
 }
+
 async function produce(mode,message,old){
  let draft=null;
  try{
-  const ac=new AbortController();const timeout=setTimeout(()=>ac.abort(),15000);
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),15000);
   try{
-   const r=await fetch("/api/partner",{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({kind:"draft",mode,teamCount:state.names.length,message,draft:old||null,recent:state.recent.slice(-6)}),signal:ac.signal});
-   if(r.ok){const data=await r.json();if(data.draft?.prompt)draft=data.draft;}
+   const response=await fetch("/api/partner",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind:"draft",mode,teamCount:state.names.length,message,draft:old||null,recent:state.recent.slice(-8)}),signal:controller.signal});
+   if(response.ok){const data=await response.json();if(data.draft?.prompt)draft=data.draft}
   }finally{clearTimeout(timeout)}
  }catch{}
- const normalized=draft?{...draft,mode}:fallback(mode,old?.prompt);
- if(normalized.prompt===state.lastExample&&mode===games[state.gameIndex].id)return fallback(mode,state.lastExample);
- return normalized;
+ const question=draft?{...draft,mode}:fallback(mode,old?.prompt||state.lastExample);
+ if(question.prompt===state.lastExample)return fallback(mode,state.lastExample);
+ return question;
 }
-function verbalQuestion(q){let t=q.prompt;
- if(Array.isArray(q.options)&&q.options.length===2)t+=` 選択肢は、A、${q.options[0]}。B、${q.options[1]}。`;
- return t;
+
+function verbalQuestion(question){
+ let text=String(question.prompt||"");
+ if(Array.isArray(question.options)&&question.options.length===2)text+=` 選択肢は、A、${question.options[0]}。B、${question.options[1]}。`;
+ if(question.criterion&&!text.includes(question.criterion))text+=` 判定は、${question.criterion}`;
+ return text;
 }
+
 async function showExample(extra=""){
- working=true;status("🐰 例題を考えているよ");
- const game=games[state.gameIndex];const q=await produce(game.id,`ゲームの例題を1件。${extra} ${game.rule} 本番用と内容が重複しないようにして。`,null);
- state.lastExample=q.prompt;state.question=null;state.phase="example";working=false;persist();
- say(`第${state.gameIndex+1}ゲームは、${game.name}！${game.rule} まずは例題だよ。${verbalQuestion(q)} ${state.staff||"スタッフ"}さん、みんなに分かるように、一度実践してみてね。説明が終わったら、「説明終わったよ」と教えてね。`);
+ working=true;render();
+ const game=currentGame();
+ const question=await produce(game.id,`ゲームの例題を一件。${extra} ${game.rule} 本番用と内容を重複させない。`,null);
+ state.lastExample=question.prompt;state.question=null;state.phase="example";working=false;persist();render();
+ await say(`第${state.gameIndex+1}ゲームは、${game.name}です。${game.rule} まずは例題です。${verbalQuestion(question)} ${state.staff||"スタッフ"}さん、みんなに分かるように一度実演してください。終わったら、説明終わったよ、と教えてください。`);
 }
+
 async function showQuestion(extra=""){
- working=true;status("🌼 本番のお題を考えているよ");
- const game=games[state.gameIndex];const q=await produce(game.id,`さっきの例題と別の、新しい本番用のお題を作成して。${extra} 例題:${state.lastExample}`,state.question);
- state.question=q;state.questionNumber++;state.phase="live";state.recent.push(q.prompt);state.recent=state.recent.slice(-20);
- working=false;persist();say(`ありがとう！それではみなさん、スタートです！第${state.gameIndex+1}ゲーム、${state.questionNumber}問目のお題は……${verbalQuestion(q)} さあ、挑戦してみよう！`);
+ working=true;render();
+ const game=currentGame();
+ const question=await produce(game.id,`例題とは別の、新しい本番用のお題を作る。${extra} 例題:${state.lastExample}`,state.question);
+ state.question=question;state.questionNumber++;state.phase="live";state.recent.push(question.prompt);state.recent=state.recent.slice(-24);working=false;persist();render();
+ await say(`ありがとう。それでは、みなさんスタートです。第${state.gameIndex+1}ゲーム、${state.questionNumber}問目のお題は、${verbalQuestion(question)} さあ、挑戦してください。`);
 }
+
 async function nextGame(){
- state.gameIndex=(state.gameIndex+1)%games.length;state.questionNumber=0;state.phase="transition";persist();await showExample();
-}
-async function chatReply(message){
- working=true;status("💭 もこが考えているよ");
- let response="";
- try{
- const abort=new AbortController(),tid=setTimeout(()=>abort.abort(),13000);
- try{
- const r=await fetch("/api/partner",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind:"chat",mode:games[state.gameIndex].id,teamCount:state.names.length,message,history:[],recent:state.recent.slice(-4)}),signal:abort.signal});
- if(r.ok){const data=await r.json();response=data.reply||"";}
- }finally{clearTimeout(tid)}
- }catch{}
- working=false;
- say(response||"相談してくれてありがとう！ 「次のお題」「次のゲーム」「もっと簡単に」などと声をかけてね。");
-}
-async function interpret(raw){
- const msg=norm(raw);
- if(!msg)return;
- if(!state.started)return;
- if(working||speaking)return;
- statusText="✨ 聞き取れたよ：「"+raw.slice(0,36)+"」";render();
- if(isMatch(msg,["もう一度","繰り返して","聞こえなかった","もういっかい"])){say(lastSpeech);return}
- if(isMatch(msg,["順位","何点","得点教えて"])){say("ただいまの得点は、"+rank()+"です！");return}
- if(isMatch(msg,["例題を変えて","別の例題"])){await showExample("別の例題にして");return}
- if(isMatch(msg,["説明終わ","練習終わ","準備できた","実践終わ","説明できた","みんな分かった"])){await showQuestion();return}
- if(isMatch(msg,["次のゲーム","次の種目","種目変更"])){await nextGame();return}
- if(isMatch(msg,["次のお題","次の問題","もう一問","新しい問題"])){await showQuestion();return}
- if(isMatch(msg,["もっと簡単","やさしく","もっと難しく","難しく","もっと面白く","違うお題","別のお題"])){
-  if(state.phase==="example")await showExample(raw);
-  else await showQuestion(raw);
-  return;
- }
- if(isMatch(msg,["新証拠","証拠を"])){if(state.question?.evidence)say("新しい証拠が出たよ！"+state.question.evidence);else say("今のお題には、追加の証拠はないよ。");return}
- if(addPoints(raw))return;
- if(state.phase==="example"&&isMatch(msg,["オッケー","OK","はい、できた","終わったよ"])){await showQuestion();return}
- await chatReply(raw);
-}
-async function begin(){
- if(state.started){showSetup=false;activated=true;listeningWanted=true;micDenied=false;render();say(`おかえりなさい！第${state.gameIndex+1}ゲームだよ。${state.phase==="example"?"説明が終わったら、説明終わったと教えてね。":"次のお題、と声をかけてね。"}`);return}
- const teamSelect=document.getElementById("teams");const staffInput=document.getElementById("staffName");
- const count=Math.max(2,Math.min(10,Number(teamSelect?.value||3)));
- state.names=Array.from({length:count},(_,i)=>"チーム"+(i+1));state.scores=Array(count).fill(0);
- state.staff=String(staffInput?.value||"スタッフ").trim().slice(0,14)||"スタッフ";
- state.started=true;state.phase="intro";state.gameIndex=0;state.questionNumber=0;state.recent=[];state.question=null;
- activated=true;listeningWanted=true;micDenied=false;showSetup=false;persist();render();
- try{if(window.navigator?.mediaDevices?.getUserMedia){const audio=await window.navigator.mediaDevices.getUserMedia({audio:true});audio.getTracks?.().forEach(track=>track.stop());}}catch{micDenied=true;activated=false;listeningWanted=false;}
+ state.gameIndex=(state.gameIndex+1)%games.length;state.questionNumber=0;state.phase="transition";state.lastExample="";state.question=null;persist();
  await showExample();
 }
-function handle(action){
- switch(action){
- case "openSetup":showSetup=true;render();break;
- case "begin":void begin();break;
- case "dismiss":showSetup=false;render();break;
- case "scores":showType="scores";render();break;
- case "help":showType="help";render();break;
- case "close":showType="";render();break;
- case "text":showType="";textPanel=!textPanel;render();break;
- case "listen":showType="";activated=true;listeningWanted=true;micDenied=false;try{window.speechSynthesis?.cancel?.();}catch{}speaking=false;render();queueListen();break;
- case "newGame":if(window.confirm("現在の得点を消して、新しい大会を始めますか？")){const staff=state.staff;state=empty();state.staff=staff;activated=false;listeningWanted=false;stopListening();showType="";showSetup=true;persist();render()}break;
- }}
-document.addEventListener("click",e=>{const b=e.target?.closest?.("[data-action]");if(b)handle(b.dataset.action)});
-document.addEventListener("submit",e=>{if(e.target?.id==="textForm"){e.preventDefault();const t=document.getElementById("textLine")?.value||"";textPanel=false;render();void interpret(t)}});
-if(state.started){avatarText=`おかえりなさい！「声で始める」を押したら、またお話しできるよ。`;statusText="🎙️ マイクを待っています";}
+
+async function chatReply(message){
+ working=true;render();let reply="";
+ try{
+  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),13000);
+  try{
+   const response=await fetch("/api/partner",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind:"chat",mode:currentGame().id,teamCount:state.names.length,message,history:[],recent:state.recent.slice(-5)}),signal:controller.signal});
+   if(response.ok){const data=await response.json();reply=String(data.reply||"").trim()}
+  }finally{clearTimeout(timeout)}
+ }catch{}
+ working=false;render();
+ await say(reply||"うまく聞き取れなかったかもしれません。次のお題、次のゲーム、もう一度、のように短く話してください。");
+}
+
+async function handlePending(message){
+ if(!pending)return false;
+ const value=norm(message);
+ const yes=isMatch(value,["はい","いいよ","オッケー","ok","お願いします","その通り"]);
+ const no=isMatch(value,["違う","いいえ","やめて","取消","取り消し","キャンセル"]);
+ if(Date.now()-pending.createdAt>20000){pending=null;await say("確認の時間が過ぎたので、操作を取り消しました。");return true}
+ if(!yes&&!no){await say("はい、または、違う、と答えてください。");return true}
+ const command=pending;pending=null;
+ if(no){await say("わかりました。取り消しました。");return true}
+ if(command.type==="score"){
+  state.scores[command.teamIndex]+=command.points;
+  state.lastScore={teamIndex:command.teamIndex,points:command.points};persist();render();
+  await say(`${state.names[command.teamIndex]}に${command.points}点を加えました。合計${state.scores[command.teamIndex]}点です。`);return true;
+ }
+ if(command.type==="reset"){
+  const staff=state.staff;state=empty();state.staff=staff;state.started=true;state.phase="team_setup";persist();render();
+  await say("新しい大会を始めます。チームはいくつですか。二から十の数字で教えてください。");return true;
+ }
+ return false;
+}
+
+async function interpret(raw){
+ const message=norm(raw);
+ if(!message||working||speaking)return;
+ if(await handlePending(raw))return;
+
+ if(state.phase==="team_setup"){
+  const count=parseTeamCount(raw);
+  if(!count){await say("二から十までのチーム数を、三チーム、のように教えてください。");return}
+  state.names=Array.from({length:count},(_,index)=>`チーム${index+1}`);state.scores=Array(count).fill(0);state.phase="intro";persist();render();
+  await say(`${count}チームですね。それでは始めます。`,{listenAfter:false});
+  await showExample();return;
+ }
+
+ if(isMatch(message,["もう一度","もういちど","繰り返して","聞こえなかった","もういっかい"])){await say(lastSpeech);return}
+ if(isMatch(message,["順位","何点","得点教えて","点数教えて"])){await say("ただいまの得点は、"+rankedText());return}
+ if(isMatch(message,["得点を戻して","点を戻して","今の得点を取り消","加点を取り消"])){undoScore(true);return}
+ if(isMatch(message,["最初から","新しい大会","大会をやり直"])){pending={type:"reset",createdAt:Date.now()};await say("今の得点を消して、新しい大会にしていいですか。");return}
+ if(state.phase==="example"&&isMatch(message,["説明終わ","練習終わ","準備できた","実演終わ","実践終わ","説明できた","みんな分かった","はいできた","終わったよ"])){await showQuestion();return}
+ if(isMatch(message,["例題を変えて","別の例題"])){await showExample("別の例題にする。");return}
+ if(isMatch(message,["次のゲーム","次の種目","種目変更"])){await nextGame();return}
+ if(isMatch(message,["次のお題","次の問題","もう一問","新しい問題"])){await showQuestion();return}
+ if(isMatch(message,["もっと簡単","やさしくして","もっと難しく","難しくして","もっと面白く","違うお題","別のお題"])){
+  if(state.phase==="example")await showExample(raw);else await showQuestion(raw);return;
+ }
+ if(isMatch(message,["新しい証拠","新証拠","証拠を"])){await say(state.question?.evidence?"新しい証拠です。"+state.question.evidence:"今のお題には、追加の証拠はありません。");return}
+ const score=parseScore(raw);
+ if(score){pending={type:"score",...score,createdAt:Date.now()};await say(`${state.names[score.teamIndex]}に${score.points}点でいいですか。はい、または、違う、と答えてください。`);return}
+ await chatReply(raw);
+}
+
+function undoScore(speakResult=false){
+ const item=state.lastScore;
+ if(!item||item.teamIndex<0||item.teamIndex>=state.scores.length){if(speakResult)void say("取り消せる得点はありません。");return}
+ state.scores[item.teamIndex]=Math.max(0,state.scores[item.teamIndex]-item.points);state.lastScore=null;persist();render();
+ if(speakResult)void say(`${state.names[item.teamIndex]}の直前の${item.points}点を取り消しました。`);
+}
+
+async function requestMicrophone(){
+ if(!window.navigator?.mediaDevices?.getUserMedia)return true;
+ try{
+  const stream=await window.navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+  stream.getTracks?.().forEach(track=>track.stop());return true;
+ }catch{return false}
+}
+
+async function activate(){
+ if(activated)return;
+ activated=true;listeningWanted=true;micDenied=false;render();
+ const granted=await requestMicrophone();
+ if(!granted){micDenied=true;listeningWanted=false;render();await say("マイクを使えません。ブラウザのマイクを許可してから、画面を長押しして復旧メニューを開いてください。",{listenAfter:false});return}
+ if(state.started){
+  await say(`おかえりなさい。第${state.gameIndex+1}ゲーム、${currentGame().name}です。${state.phase==="example"?"説明が終わったら、説明終わったよ、と教えてください。":state.phase==="team_setup"?"チームはいくつですか。二から十の数字で教えてください。":"続けるときは、次のお題、と声をかけてください。"}`);
+  return;
+ }
+ state.started=true;state.phase="team_setup";persist();render();
+ await say("こんにちは。サイ校ゲームを始めます。チームはいくつですか。二から十の数字で教えてください。");
+}
+
+function openAdmin(){
+ if(showAdmin)return;
+ listeningWanted=false;stopListening();cancelSpeech();showAdmin=true;render();
+}
+
+function closeAdmin(){
+ showAdmin=false;listeningWanted=true;render();queueListen(500);
+}
+
+function saveSettings(){
+ const count=Math.max(2,Math.min(10,Number(document.getElementById("adminTeams")?.value||state.names.length)));
+ const staff=String(document.getElementById("adminStaff")?.value||state.staff||"スタッフ").trim().slice(0,14)||"スタッフ";
+ const oldScores=state.scores.slice();state.names=Array.from({length:count},(_,index)=>`チーム${index+1}`);state.scores=state.names.map((_,index)=>oldScores[index]||0);state.staff=staff;persist();render();
+}
+
+function handleAction(button){
+ const action=button.dataset.action;
+ if(action==="activate"){void activate();return}
+ if(action==="closeAdmin"){closeAdmin();return}
+ if(action==="resume"){micDenied=false;activated=true;showAdmin=false;listeningWanted=true;render();queueListen(250);return}
+ if(action==="repeat"){showAdmin=false;listeningWanted=true;render();void say(lastSpeech||"音声ゲームを再開します。");return}
+ if(action==="nextQuestion"){showAdmin=false;listeningWanted=true;render();void showQuestion();return}
+ if(action==="nextGame"){showAdmin=false;listeningWanted=true;render();void nextGame();return}
+ if(action==="undoScore"){undoScore(false);return}
+ if(action==="score"){
+  const teamIndex=Number(button.dataset.team),points=Number(button.dataset.points);
+  if(Number.isInteger(teamIndex)&&state.scores[teamIndex]!=null&&[1,3,5].includes(points)){state.scores[teamIndex]+=points;state.lastScore={teamIndex,points};persist();render()}
+  return;
+ }
+ if(action==="reset"){
+  if(window.confirm("現在の得点を消して、新しい大会を始めますか？")){const staff=state.staff;state=empty();state.staff=staff;state.started=true;state.phase="team_setup";persist();showAdmin=false;listeningWanted=true;render();void say("新しい大会を始めます。チームはいくつですか。二から十の数字で教えてください。")}
+ }
+}
+
+document.addEventListener("click",event=>{const button=event.target?.closest?.("[data-action]");if(button)handleAction(button)});
+document.addEventListener("submit",event=>{if(event.target?.id==="settingsForm"){event.preventDefault();saveSettings()}});
+document.addEventListener("pointerdown",event=>{
+ if(event.target?.closest?.(".admin-panel"))return;
+ holdStart={x:event.clientX,y:event.clientY};clearTimeout(holdTimer);
+ holdTimer=setTimeout(()=>{holdTimer=0;openAdmin()},1400);
+});
+document.addEventListener("pointermove",event=>{
+ if(!holdStart)return;
+ if(Math.abs(event.clientX-holdStart.x)>12||Math.abs(event.clientY-holdStart.y)>12){clearTimeout(holdTimer);holdTimer=0;holdStart=null}
+});
+for(const type of ["pointerup","pointercancel","pointerleave"])document.addEventListener(type,()=>{clearTimeout(holdTimer);holdTimer=0;holdStart=null});
+document.addEventListener("keydown",event=>{if(event.shiftKey&&event.key==="Escape"){event.preventDefault();showAdmin?closeAdmin():openAdmin()}});
+document.addEventListener("visibilitychange",()=>{if(document.hidden){stopListening()}else if(activated&&!showAdmin){listeningWanted=true;queueListen(900)}});
+window.addEventListener?.("beforeunload",()=>{stopListening();cancelSpeech()});
+
 render();
 })();

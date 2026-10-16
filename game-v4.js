@@ -7,12 +7,12 @@ const MODES=[
 {id:"court",name:"どうでも裁判所",icon:"⚖️"},
 {id:"press",name:"珍・記者会見",icon:"🎤"},
 {id:"choice",name:"究極の二択",icon:"💭"},
-{id:"challenge",name:"おバカ記録",icon:"🏆"}
+{id:"challenge",name:"ぴったり記録",icon:"🏆"}
 ];
 const KEY="saiko-grand-prix-v4",OLD_KEY="saiko-grand-prix-studio-v3",HISTORY_KEY="saiko-recent-v4";
 const root=document.getElementById("root"),audience=document.getElementById("audience"),news=document.getElementById("news");
 const enc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const modeName=id=>MODES.find(m=>m.id===id)?.name||"おバカ対決";
+const modeName=id=>MODES.find(m=>m.id===id)?.name||"わくわく対決";
 const choose=a=>a[Math.floor(Math.random()*a.length)];
 const mascot=()=>'<div class="mascot-box" aria-hidden="true"><span class="sparkle one">✦</span><div class="mascot"><i class="ear left"></i><i class="ear right"></i><i class="eye left"></i><i class="eye right"></i><i class="blush left"></i><i class="blush right"></i><i class="nose"></i><span class="bow">♥</span></div><span class="sparkle two">✧</span></div>';
 const sources={sync:[
@@ -189,17 +189,17 @@ function timerPanel(){
 function renderAudience(){
  if(!projecting){audience.classList.remove("on");audience.innerHTML="";return;}
  const q=s.published;audience.classList.add("on");
- audience.innerHTML=btn("スタッフ画面へ戻る","project","tiny close")+'<div class="aud-label">🌸 サイ校 おバカ世界選手権 🌸</div>'+
+ audience.innerHTML=btn("スタッフ画面へ戻る","project","tiny close")+'<div class="aud-label">🌸 サイ校ゲーム 🌸</div>'+
  (q?'<h2>'+enc(q.title)+'</h2><div class="aud-question">'+enc(q.prompt)+'</div>'+options(q)+(q.mode==="court"&&s.evidence?'<div class="evidence"><strong>⚡ 新証拠！</strong><div>'+enc(q.evidence)+'</div></div>':""):'<h2>もうすぐ始まるよ！</h2><div class="aud-question">わくわくして待っててね♪</div>')+
  '<div class="aud-score">'+s.names.map((n,i)=>'<span>'+enc(n)+'：'+s.scores[i]+'pt</span>').join("")+'</div>';
 }
 function renderNews(){news.classList.toggle("on",newsShowing);news.innerHTML=newsShowing?'<div class="news-card"><h2>📣 サイ校 緊急ニュース！</h2><p>'+enc(newsText)+'</p>'+btn("ニュースを閉じる","news","primary")+'</div>':"";}
 function setupScreen(){
- return '<div class="app setup"><div class="panel pink-panel">'+mascot()+'<div class="section-tag">WELCOME TO SAIKO!</div><h1>🌸 おバカ世界選手権へようこそ！</h1><p class="note">まずはチーム数を決めよう！ 今日も笑って、真剣勝負♪</p><label for="teamCount">何チームで遊ぶ？</label><select id="teamCount" aria-label="参加チーム数">'+Array.from({length:9},(_,i)=>i+2).map(n=>'<option value="'+n+'" '+(n===s.names.length?"selected":"")+'>'+n+'チーム</option>').join("")+'</select><div class="setup-names">'+s.names.map((n,i)=>'<div><label for="team'+i+'">チーム '+(i+1)+'</label><input id="team'+i+'" maxlength="22" data-name="'+i+'" value="'+enc(n)+'"></div>').join("")+'</div>'+btn("🎉 このチームでゲーム開始！","begin","primary big")+'</div></div>';
+ return '<div class="app setup"><div class="panel pink-panel">'+mascot()+'<div class="section-tag">WELCOME TO SAIKO!</div><h1>🌸 サイ校ゲームへようこそ！</h1><p class="note">まずはチーム数を決めよう！ 今日も笑って、真剣勝負♪</p><label for="teamCount">何チームで遊ぶ？</label><select id="teamCount" aria-label="参加チーム数">'+Array.from({length:9},(_,i)=>i+2).map(n=>'<option value="'+n+'" '+(n===s.names.length?"selected":"")+'>'+n+'チーム</option>').join("")+'</select><div class="setup-names">'+s.names.map((n,i)=>'<div><label for="team'+i+'">チーム '+(i+1)+'</label><input id="team'+i+'" maxlength="22" data-name="'+i+'" value="'+enc(n)+'"></div>').join("")+'</div>'+btn("🎉 このチームでゲーム開始！","begin","primary big")+'</div></div>';
 }
 function render(){
  if(!s.started){root.innerHTML=setupScreen();renderAudience();renderNews();return;}
- root.innerHTML='<div class="app"><header class="head"><div class="brand"><div class="logo">🌸</div><div><small>SAIKO HAPPY GAME SHOW</small><strong>サイ校・おバカ世界選手権</strong></div></div><div class="header-actions">'+btn("📺 観客画面","project","mint tiny")+btn("⚙️","settings","tiny")+'</div></header><div class="hero"><div><span class="float-tag">🌷 きょうも爆笑、真剣勝負！</span><h1>どんなお題に<em>しようかな？</em></h1><p>人間のスタッフが司会役。もこと相談して、今日だけのお題を作ろう。</p></div>'+mascot()+'</div><div class="layout"><div class="left-stack"><section class="panel"><div class="panel-head"><h2>🎮 きょうのゲーム</h2><span class="status-tag">7種類</span></div><div class="modegrid">'+MODES.map(m=>'<button class="mode-btn '+(s.mode===m.id?"active":"")+'" data-mode="'+m.id+'"><span class="emoji">'+m.icon+'</span>'+m.name+'</button>').join("")+'</div></section>'+publishedPanel()+scorePanel()+'</div><div class="right-stack">'+chatPanel()+draftPanel()+timerPanel()+'<section class="panel"><div class="panel-head"><h2>🎊 お楽しみボタン</h2></div><div class="actions">'+btn("📣 緊急ニュース","news","violet")+btn(s.volume?"🔊 音声ON":"🔇 音声OFF","volume")+btn("📲 ホーム画面に追加","install","tiny")+'</div><div class="divider"></div><div class="actions">'+btn("🆕 新しい大会","reset","danger tiny")+'</div><p class="note">チーム名・得点・相談履歴は、このブラウザに保存されます。個人情報はAIに入力しないでください。</p></section></div></div><div class="footer">サイ校プロジェクト岩国 · 企画はスタッフ × AI · 出題するのはスタッフの判断で</div></div>';
+ root.innerHTML='<div class="app"><header class="head"><div class="brand"><div class="logo">🌸</div><div><small>SAIKO HAPPY GAME SHOW</small><strong>サイ校ゲーム</strong></div></div><div class="header-actions">'+btn("📺 観客画面","project","mint tiny")+btn("⚙️","settings","tiny")+'</div></header><div class="hero"><div><span class="float-tag">🌷 きょうも笑顔で、真剣勝負！</span><h1>どんなお題に<em>しようかな？</em></h1><p>人間のスタッフが司会役。AIと相談して、今日だけのお題を作ろう。</p></div>'+mascot()+'</div><div class="layout"><div class="left-stack"><section class="panel"><div class="panel-head"><h2>🎮 きょうのゲーム</h2><span class="status-tag">7種類</span></div><div class="modegrid">'+MODES.map(m=>'<button class="mode-btn '+(s.mode===m.id?"active":"")+'" data-mode="'+m.id+'"><span class="emoji">'+m.icon+'</span>'+m.name+'</button>').join("")+'</div></section>'+publishedPanel()+scorePanel()+'</div><div class="right-stack">'+chatPanel()+draftPanel()+timerPanel()+'<section class="panel"><div class="panel-head"><h2>🎊 お楽しみボタン</h2></div><div class="actions">'+btn("📣 緊急ニュース","news","violet")+btn(s.volume?"🔊 音声ON":"🔇 音声OFF","volume")+btn("📲 ホーム画面に追加","install","tiny")+'</div><div class="divider"></div><div class="actions">'+btn("🆕 新しい大会","reset","danger tiny")+'</div><p class="note">チーム名・得点・相談履歴は、このブラウザに保存されます。個人情報はAIに入力しないでください。</p></section></div></div><div class="footer">サイ校プロジェクト岩国 · 企画はスタッフ × AI · 出題するのはスタッフの判断で</div></div>';
  renderAudience();renderNews();tick();
 }
 function tick(){if(timerRunning){timerLeft=Math.max(0,Math.ceil((timerEnd-Date.now())/1000));if(timerLeft===0){timerRunning=false;}}
