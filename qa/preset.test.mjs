@@ -65,6 +65,12 @@ async function voice(text){
  recognizer.onresult({results:[Object.assign([{transcript:text,confidence:.95}],{isFinal:true})]});
  await wait();
 }
+async function voiceAlternatives(items){
+ const recognizer=recognized.at(-1);
+ assert.ok(recognizer?.onresult,"recognizer missing for alternatives");
+ recognizer.onresult({results:[Object.assign(items.map((text,index)=>({transcript:text,confidence:.96-index*.12})),{isFinal:true})]});
+ await wait();
+}
 
 test("プリセットデータは7ゲーム、3パターン、各10問で合計210問",()=>{
  const games=window.SAIKO_PRESET_GAMES;
@@ -110,7 +116,7 @@ test("ゲーム、パターン、1問目、次のお題を音声で進める",as
  assert.equal(snapshot().gameId,"sync");
  assert.equal(snapshot().pattern,2);
  assert.equal(snapshot().phase,"awaiting_first");
- await voice("一問目スタート");
+ await voiceAlternatives(["一文目スタート","第1問スタート"]);
  assert.equal(snapshot().questionIndex,0);
  assert.match(utterances.join(""),/おにぎり/);
  const repeatedAt=utterances.length;
@@ -120,6 +126,8 @@ test("ゲーム、パターン、1問目、次のお題を音声で進める",as
  await voice("次のお題お願いします");
  assert.equal(snapshot().questionIndex,1);
  assert.match(utterances.join(""),/思いきり笑える映画/);
+ await voice("次へ");
+ assert.equal(snapshot().questionIndex,2);
  await voice("5問目から再開");
  assert.equal(snapshot().questionIndex,4);
 });
@@ -172,4 +180,42 @@ test("長押しの管理画面に文字入力、手動進行、秘密表示が�
  assert.doesNotMatch(markup.innerHTML,/チーム名と得点/);
  click("closeAdmin");
  assert.doesNotMatch(markup.innerHTML,/管理・復旧/);
+});
+
+test("全7ゲーム・3パターンを第10問の終了まで通して進行できる",async()=>{
+ const api=window.__SAIKO_PRESET_TEST__;
+ const games=window.SAIKO_PRESET_GAMES;
+ let sessions=0;
+ let questions=0;
+ for(const game of games){
+  for(const pattern of [1,2,3]){
+   const modes=game.id==="challenge"?["個人戦","チーム戦"]:[""];
+   for(const mode of modes){
+    const command=`${game.name}、${mode?`${mode}、`:""}パターン${pattern}、スタート`;
+    assert.equal(await api.interpret(command),true,command);
+    assert.equal(snapshot().phase,"awaiting_first",command);
+    assert.equal(await api.interpret("第一問スタート"),true,command);
+    for(let index=0;index<10;index+=1){
+     assert.equal(snapshot().questionIndex,index,`${command} / ${index+1}問目`);
+     if(game.id==="mime"){
+      assert.equal(snapshot().phase,"mime_wait_secret");
+      await api.interpret("お題を教えて");
+      assert.equal(snapshot().phase,"mime_wait_start");
+      await api.interpret("ゲームを始めて");
+      assert.equal(snapshot().phase,"live");
+     }
+     if(game.id==="court"){
+      await api.interpret("証拠をお願いします");
+      assert.equal(snapshot().evidenceShown,true);
+     }
+     questions+=1;
+     await api.interpret("次のお題お願いします");
+    }
+    assert.equal(snapshot().phase,"complete",command);
+    sessions+=1;
+   }
+  }
+ }
+ assert.equal(sessions,24);
+ assert.equal(questions,240);
 });

@@ -7,6 +7,7 @@ const script=readFileSync(new URL("../avatar-stage.js",import.meta.url),"utf8");
 const css=readFileSync(new URL("../avatar-stage.css",import.meta.url),"utf8");
 const cue=readFileSync(new URL("../host-cue-sheet.html",import.meta.url),"utf8");
 const guide=readFileSync(new URL("../game-guide.html",import.meta.url),"utf8");
+const analog=readFileSync(new URL("../analog-game-book.html",import.meta.url),"utf8");
 
 test("本番URLは完全音声アバター画面を読み込む",()=>{
  assert.match(html,/avatar-stage\.js\?v=voice-only/);
@@ -59,4 +60,16 @@ test("スタッフと利用者向け説明資料に役割、ゲーム、安全�
  assert.match(guide,/操作はスタッフがする/);
  assert.match(guide,/1人1分/);
  assert.match(cue,/game-guide\.html/);
+});
+
+test("完全アナログ版に全210問とゲーム別の進行情報がある",()=>{
+ assert.match(analog,/完全アナログ版/);
+ assert.equal((analog.match(/class="question(?:\s|\")/g)||[]).length,210);
+ assert.equal((analog.match(/class="pattern"/g)||[]).length,21);
+ assert.equal((analog.match(/class="evidence"/g)||[]).length,30);
+ assert.equal((analog.match(/class="mode individual"/g)||[]).length,30);
+ assert.equal((analog.match(/class="mode team"/g)||[]).length,30);
+ for(const name of ["ぴったりシンクロ","おすすめプレゼン","ジェスチャー対決","もしも裁判","記者会見チャレンジ","どっちを選ぶ？","ぴったりチャレンジ"])assert.match(analog,new RegExp(name.replace("？","\\？")));
+ assert.match(cue,/analog-game-book\.html/);
+ assert.match(guide,/analog-game-book\.html/);
 });

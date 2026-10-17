@@ -14,6 +14,7 @@ on:
       - 'manifest.webmanifest'
       - 'host-cue-sheet.html'
       - 'game-guide.html'
+      - 'analog-game-book.html'
       - 'game-v3.css'
       - 'game-v4.css'
       - 'new-game.html'

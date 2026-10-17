@@ -118,7 +118,7 @@ function say(text,{listenAfter=true}={}){
  const spoken=String(text||"").replace(/\s+/g," ").trim();if(!spoken)return Promise.resolve();
  lastSpeech=spoken;stopListening();cancelSpeech();speaking=true;render();const job=++speechJob;const chunks=speechChunks(spoken);
  return new Promise(resolve=>{
-  const finish=()=>{if(job!==speechJob){resolve();return}clearTimeout(speechTimer);speechTimer=0;speaking=false;render();resolve();if(listenAfter)queueListen(900)};
+  const finish=()=>{if(job!==speechJob){resolve();return}clearTimeout(speechTimer);speechTimer=0;speaking=false;render();resolve();if(listenAfter)queueListen(500)};
   const playBrowser=index=>{if(job!==speechJob){resolve();return}if(index>=chunks.length){finish();return}if(!window.speechSynthesis||!window.SpeechSynthesisUtterance){finish();return}const utterance=new window.SpeechSynthesisUtterance(chunks[index]);utterance.lang="ja-JP";utterance.rate=.96;utterance.pitch=.92;utterance.volume=1;const voice=chooseVoice();if(voice)utterance.voice=voice;let ended=false;const next=()=>{if(ended||job!==speechJob)return;ended=true;clearTimeout(speechTimer);playBrowser(index+1)};utterance.onend=next;utterance.onerror=next;speechTimer=setTimeout(next,Math.min(30000,7000+chunks[index].length*230));try{window.speechSynthesis.speak(utterance)}catch{next()}};
   const path=window.SAIKO_PRESET_AUDIO?.[spoken];
   if(path&&window.Audio){
@@ -136,13 +136,18 @@ function say(text,{listenAfter=true}={}){
 function queueListen(delay=700){clearListenTimer();if(!activated||!listeningWanted||speaking||showAdmin||micDenied)return;listenTimer=setTimeout(()=>{listenTimer=0;if(!activated||!listeningWanted||speaking||showAdmin||micDenied||recognizerBusy)return;startRecognition()},delay)}
 function ensureListening(){
  if(!activated||!listeningWanted||speaking||preparingMic||showAdmin||micDenied)return;
- if(recognition&&recognitionStartedAt&&Date.now()-recognitionStartedAt>15000){stopListening();queueListen(250);return}
+ if(recognition&&recognitionStartedAt&&Date.now()-recognitionStartedAt>12000){stopListening();queueListen(200);return}
  if(!recognizerBusy&&!recognition&&!listenTimer)queueListen(250);
 }
-function bestTranscript(event){
- const results=event?.results;if(!results)return "";
- for(let index=results.length-1;index>=0;index--){if(results[index]?.isFinal===false)continue;const choices=Array.from(results[index]||[]).map(item=>({text:String(item?.transcript||"").trim(),confidence:Number(item?.confidence)||0})).filter(item=>item.text).sort((a,b)=>b.confidence-a.confidence);if(choices[0]?.text)return choices[0].text}
- return "";
+function transcriptCandidates(event){
+ const results=event?.results;if(!results)return [];
+ const choices=[];
+ for(let index=results.length-1;index>=0;index--){if(results[index]?.isFinal===false)continue;for(const item of Array.from(results[index]||[])){const text=String(item?.transcript||"").trim();if(text)choices.push({text,confidence:Number(item?.confidence)||0})}}
+ return [...new Map(choices.sort((a,b)=>b.confidence-a.confidence).map(item=>[norm(item.text),item.text])).values()].filter(Boolean);
+}
+async function interpretCandidates(candidates){
+ for(const words of candidates){if(await interpret(words)){lastHeard=words;render();return true}}
+ queueListen(350);return false;
 }
 function startRecognition(){
  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -151,9 +156,9 @@ function startRecognition(){
  try{
   const recognizer=new SpeechRecognition();recognition=recognizer;recognizer.lang="ja-JP";recognizer.continuous=false;recognizer.interimResults=false;recognizer.maxAlternatives=3;
   recognizer.onstart=()=>{if(epoch!==recognitionEpoch)return;recognizerBusy=true;recognitionStartedAt=Date.now();recognitionRetry=0;render()};
-  recognizer.onresult=event=>{if(epoch!==recognitionEpoch)return;const words=bestTranscript(event);recognizerBusy=false;recognition=null;recognitionStartedAt=0;if(words){lastHeard=words;render();void interpret(words)}else queueListen(650)};
-  recognizer.onerror=event=>{if(epoch!==recognitionEpoch)return;const code=String(event?.error||"");recognizerBusy=false;recognition=null;recognitionStartedAt=0;render();if(["not-allowed","service-not-allowed","audio-capture"].includes(code)){micDenied=true;listeningWanted=false;void say("マイクを使えないみたいです。画面を長押しして、文字入力またはマイク再開を使ってください。",{listenAfter:false});return}recognitionRetry=Math.min(recognitionRetry+1,5);queueListen(code==="network"?Math.min(8000,800*Math.pow(2,recognitionRetry)):700)};
-  recognizer.onend=()=>{if(epoch!==recognitionEpoch)return;recognizerBusy=false;recognition=null;recognitionStartedAt=0;render();if(!speaking)queueListen(700)};
+  recognizer.onresult=event=>{if(epoch!==recognitionEpoch)return;const candidates=transcriptCandidates(event);recognizerBusy=false;recognition=null;recognitionStartedAt=0;if(candidates.length){lastHeard=candidates[0];render();void interpretCandidates(candidates)}else queueListen(400)};
+  recognizer.onerror=event=>{if(epoch!==recognitionEpoch)return;const code=String(event?.error||"");recognizerBusy=false;recognition=null;recognitionStartedAt=0;render();if(["not-allowed","service-not-allowed","audio-capture"].includes(code)){micDenied=true;listeningWanted=false;void say("マイクを使えないみたいです。画面を長押しして、文字入力またはマイク再開を使ってください。",{listenAfter:false});return}recognitionRetry=Math.min(recognitionRetry+1,5);queueListen(code==="network"?Math.min(4000,600*Math.pow(2,recognitionRetry)):500)};
+  recognizer.onend=()=>{if(epoch!==recognitionEpoch)return;recognizerBusy=false;recognition=null;recognitionStartedAt=0;render();if(!speaking)queueListen(400)};
   recognitionStartedAt=Date.now();recognizer.start();
  }catch{recognizerBusy=false;recognition=null;recognitionStartedAt=0;recognitionRetry=Math.min(recognitionRetry+1,5);render();queueListen(Math.min(5000,500*recognitionRetry))}
 }
@@ -218,19 +223,19 @@ async function interpret(raw){
  const message=norm(raw);if(!message||speaking)return false;
  const start=parseStartCommand(raw);
  if(start){if(start.missing==="pattern"){await say(`${start.game.name}ですね。パターン1、パターン2、パターン3のどれかを付けて、もう一度言ってください。`);return true}if(start.missing==="mode"){await say("ぴったりチャレンジは、個人戦かチーム戦も付けて、もう一度言ってください。");return true}await startGame(start.game,start.pattern,start.mode);return true}
- if(isMatch(message,["もう一度","もういちど","繰り返して","聞こえなかった","もういっかい"])){await say(lastSpeech||"まだ読み上げた内容はありません。");return true}
+ if(isMatch(message,["もう一度","もういちど","繰り返して","聞こえなかった","もういっかい","もう一回お願いします"])){await say(lastSpeech||"まだ読み上げた内容はありません。");return true}
  if(isMatch(message,["今は何問目","何問目","現在の問題"])){await say(state.questionIndex>=0?`今は、第${state.questionIndex+1}問です。`:"現在、お題は始まっていません。");return true}
  if(isMatch(message,["このゲームを終了","ゲーム終了","ゲームを終わる"])){await endGame();return true}
  if(isMatch(message,["最初からやり直し","説明からやり直し"])){const game=currentGame();if(game)await startGame(game,state.pattern,state.mode);else await say("現在、選ばれているゲームはありません。");return true}
  if(isMatch(message,["前のお題","前の問題","一つ戻って"])){if(state.questionIndex>0)await announceQuestion(state.questionIndex-1);else await say("これより前のお題はありません。");return true}
- if(isMatch(message,["一問目スタート","1問目スタート","一問目開始","最初のお題"])){if(state.questionIndex>=0)await say(`ゲームはすでに進行中です。今は第${state.questionIndex+1}問です。もう一度聞くときは、もう一度。次に進むときは、次のお題お願いします、と言ってください。`);else await announceQuestion(0);return true}
- const jump=message.match(/(10|[1-9]|[一二三四五六七八九十])問目(?:から)?(?:スタート|開始|再開)/);if(jump){const number=parseJapaneseNumber(jump[1]);if(number>=1&&number<=10)await announceQuestion(number-1);return true}
+ if(isMatch(message,["一問目スタート","1問目スタート","第1問スタート","第1問目スタート","一問目開始","一問目お願いします","1問目お願いします","第1問お願いします","最初のお題","最初の問題","一番目スタート"])){if(state.questionIndex>=0)await say(`ゲームはすでに進行中です。今は第${state.questionIndex+1}問です。もう一度聞くときは、もう一度。次に進むときは、次のお題お願いします、と言ってください。`);else await announceQuestion(0);return true}
+ const jump=message.match(/(?:第)?(10|[1-9]|[一二三四五六七八九十])問(?:目)?(?:から)?(?:スタート|開始|再開|お願い)/);if(jump){const number=parseJapaneseNumber(jump[1]);if(number>=1&&number<=10)await announceQuestion(number-1);return true}
  if(isMatch(message,["新しい証拠","新証拠","証拠をお願いします","証拠お願い"])){await showEvidence();return true}
- if(state.gameId==="mime"&&!isMatch(message,["次のお題","次の問題"])&&isMatch(message,["お題をお願いします","お題お願い","秘密のお題"])){await revealMimeByVoice();return true}
- if(state.gameId==="mime"&&isMatch(message,["ゲームスタート","ジェスチャースタート","回答スタート"])){await startMimePlay();return true}
- if(isMatch(message,["次のお題お願いします","次のお題","次の問題","次お願いします"])){if(!currentGame()){await say("先に、ゲーム名とパターンを指定してスタートしてください。");return true}if(state.questionIndex<0){await say("最初は、一問目スタート、と言ってください。");return true}if(state.questionIndex>=9)await finishGame();else await announceQuestion(state.questionIndex+1);return true}
+ if(state.gameId==="mime"&&!isMatch(message,["次のお題","次の問題"])&&isMatch(message,["お題をお願いします","お題お願い","お題を教えて","秘密のお題"])){await revealMimeByVoice();return true}
+ if(state.gameId==="mime"&&isMatch(message,["ゲームスタート","ジェスチャースタート","回答スタート","ゲームを始めて"])){await startMimePlay();return true}
+ if(isMatch(message,["次のお題お願いします","次のお題","次の問題","次お願いします","次へ","次に進んで","次行って","次をお願いします"])){if(!currentGame()){await say("先に、ゲーム名とパターンを指定してスタートしてください。");return true}if(state.questionIndex<0){await say("最初は、一問目スタート、と言ってください。");return true}if(state.questionIndex>=9)await finishGame();else await announceQuestion(state.questionIndex+1);return true}
  if(isMatch(message,["使い方","何て言えば","助けて","ヘルプ"])){await say(currentGame()?`現在は、${currentGame().name}、パターン${state.pattern}です。一問目スタート、次のお題お願いします、もう一度、前のお題、今は何問目、このゲームを終了、が使えます。`:"ゲーム名、パターン1、スタート、のように言ってください。");return true}
- queueListen(500);return false;
+ return false;
 }
 
 function primeSpeech(){
@@ -276,7 +281,7 @@ function handleAction(button){
  if(action==="reset"&&window.confirm("確認版の進行を初期化しますか？")){state=empty();persist();showAdmin=false;showSecret=false;listeningWanted=true;render();void say("確認版を初期化しました。ゲーム名、パターン1、スタート、のように言ってください。");}
 }
 
-document.addEventListener("click",event=>{const button=event.target?.closest?.("[data-action]");if(button)handleAction(button)});
+document.addEventListener("click",event=>{const button=event.target?.closest?.("[data-action]");if(button){handleAction(button);return}if(activated&&!showAdmin&&!speaking&&!preparingMic&&!micDenied){listeningWanted=true;stopListening();queueListen(100)}});
 document.addEventListener("submit",event=>{if(event.target?.id==="commandForm"){event.preventDefault();void runTypedCommand()}});
 document.addEventListener("pointerdown",event=>{if(event.target?.closest?.(".admin-panel"))return;holdStart={x:event.clientX,y:event.clientY};clearTimeout(holdTimer);holdTimer=setTimeout(()=>{holdTimer=0;openAdmin()},1400)});
 document.addEventListener("pointermove",event=>{if(!holdStart)return;if(Math.abs(event.clientX-holdStart.x)>12||Math.abs(event.clientY-holdStart.y)>12){clearTimeout(holdTimer);holdTimer=0;holdStart=null}});
@@ -285,6 +290,6 @@ document.addEventListener("keydown",event=>{if(event.shiftKey&&event.key==="Esca
 document.addEventListener("visibilitychange",()=>{if(document.hidden)stopListening();else if(activated&&!showAdmin){listeningWanted=true;queueListen(900)}});
 recognitionWatchdog=setInterval(ensureListening,4000);
 window.addEventListener?.("beforeunload",()=>{clearInterval(recognitionWatchdog);stopListening();cancelSpeech()});
-window.__SAIKO_PRESET_TEST__={state:()=>state,parseStartCommand,interpret,announceQuestion,startGame};
+window.__SAIKO_PRESET_TEST__={state:()=>state,parseStartCommand,interpret,interpretCandidates,transcriptCandidates,announceQuestion,startGame};
 render();
 })();
